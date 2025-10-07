@@ -1,0 +1,169 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f9f5f0;
+    padding-top: 80px;
+}
+
+/* ============================= */
+/* CARD STYLES */
+/* ============================= */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-img-top {
+    height: 220px;
+    object-fit: cover;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+/* ============================= */
+/* BUTTON STYLES */
+/* ============================= */
+.btn-custom {
+    background-color: #a1866f;
+    color: #fff;
+    border-radius: 30px;
+    padding: 8px 18px;
+    transition: 0.3s;
+}
+
+.btn-custom:hover {
+    background-color: #5c4033;
+    color: #fff;
+}
+
+.btn-wa {
+    background-color: #25d366;
+    border-radius: 30px;
+    color: #fff;
+    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-wa:hover {
+    background-color: #25d366 !important;
+    color: #fff !important;
+}
+
+/* ============================= */
+/* SECTION TITLES */
+/* ============================= */
+.section-title {
+    border-left: 5px solid #a1866f;
+    padding-left: 10px;
+    margin-bottom: 25px;
+    font-weight: bold;
+    color: #5c4033;
+}
+
+/* ============================= */
+/* PRODUCT CARD LAYOUT */
+/* ============================= */
+.product-card {
+    flex: 0 1 calc(25% - 20px);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Responsive product cards */
+@media (max-width: 992px) {
+    .product-card { flex: 0 1 calc(33.333% - 20px); }
+}
+@media (max-width: 768px) {
+    .product-card { flex: 0 1 calc(50% - 15px); }
+}
+@media (max-width: 576px) {
+    .product-card { flex: 0 1 calc(100%); }
+}
+
+/* ============================= */
+/* MODAL STYLES */
+/* ============================= */
+.modal {
+    z-index: 2000;
+}
+
+.modal-dialog {
+    margin-top: 80px;
+    max-width: 950px;
+}
+
+.modal-body img {
+    max-height: 350px;
+    object-fit: contain;
+}
+
+/* ============================= */
+/* RELATED PRODUCTS / CARDS */
+/* ============================= */
+.related-title {
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.related-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+.related-card {
+    min-width: 220px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.related-card img {
+    height: 180px;
+    width: 100%;
+    object-fit: contain;
+    background-color: #f9f5f0;
+    padding: 5px;
+}
+
+/* ============================= */
+/* PRODUCT INFO */
+/* ============================= */
+.harga-produk {
+    color: #8B4513;
+    font-weight: bold;
+}
+
+/* ============================= */
+/* SIZE OPTIONS */
+/* ============================= */
+/* Warna variant dan size */
+.btn-outline-dark, .size-option {
+    min-width: 50px;       /* Lebar kotak */
+    min-height: 40px;      /* Tinggi kotak */
+    font-size: 14px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.btn-outline-dark:hover, .size-option:hover {
+    background-color: #a1866f;  /* Hover coklat */
+    color: #fff;
+}
+
+.size-option.active {
+    background-color: #a1866f;
+    color: #fff;
+    border-color: #a1866f;
+}
+
+.size-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}

@@ -1,0 +1,59 @@
+body{
+    background: #f7f5f0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    padding-top: 70px;
+}
+h2.section-title {
+    text-align: center;
+    font-weight: 700;
+    color: #4a3228;
+    margin-bottom: 2rem;
+}
+.accordion-button {
+    background: linear-gradient(90deg, #ffdab9, #f5deb3);
+    color: #4a3228;
+    font-size: 1.05rem;
+    font-weight: 600;
+    padding: 15px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.accordion-button:not(.collapsed) {
+    background: #a1866f;
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+.accordion-button::after {
+    filter: invert(1);
+}
+.accordion-body {
+    background: #fffaf0;
+    padding: 25px;
+    border-radius: 0 0 10px 10px;
+}
+.program-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.program-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+.program-card h5 {
+    color: #8b4513;
+    font-weight: 700;
+}
+.program-card p {
+    color: #444;
+    font-size: 0.95rem;
+}
+@media (max-width: 768px) {
+    .program-card h5 {
+        font-size: 1rem;
+    }
+    .program-card p {
+        font-size: 0.85rem;
+    }
+}
