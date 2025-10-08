@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('color');
             $table->string('img');
             $table->string('price');
+            $table->string('sizes')->nullable();
             $table->timestamps();
         });
     }

@@ -16,7 +16,7 @@ class ProductController extends Controller
         $categories = Product::select('category')->distinct()->pluck('category');
 
         // ambil semua produk + relasi
-       $allProducts = Product::with(['store', 'variants.sizes'])->get();
+       $allProducts = Product::with(['store', 'variants'])->get();
 
         // Mapping buat kebutuhan JS/frontend
         $allProductsJs = $allProducts->map(function ($product) {
@@ -38,7 +38,7 @@ class ProductController extends Controller
                         'color' => $variant->color,
                         'img'   => $variant->img ? asset('storage/' . $variant->img) : null,
                         'price' => $variant->price,
-                        'sizes' => $variant->sizes->pluck('size'),
+                        'sizes' => $variant->sizes ?? [],
                     ];
                 })
             ];

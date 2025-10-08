@@ -87,23 +87,26 @@
 
               
                 {{-- Ukuran --}}
-                  @php
-                    $firstVariant = $pr->variants->first();
-                  @endphp
-                  @if($firstVariant && $firstVariant->sizes->count())
-                    <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
-                      <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
-                      <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
-                        @foreach($firstVariant->sizes as $s)
-                          <button type="button"
-                                  class="btn btn-outline-secondary btn-sm size-option"
-                                  onclick="selectSize({{ $pr->id }}, '{{ is_string($s) ? $s : $s->size }}')">
-                            {{ is_string($s) ? $s : $s->size }}
-                          </button>
-                        @endforeach
-                      </div>
-                    </div>
-                  @endif
+                  {{-- Ukuran --}}
+@php
+    $firstVariant = $pr->variants->first();
+@endphp
+{{-- CEK BARU: Pastikan sizes adalah array dan tidak kosong --}}
+@if($firstVariant && is_array($firstVariant->sizes) && count($firstVariant->sizes))
+    <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
+        <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
+        <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
+            @foreach($firstVariant->sizes as $s)
+                {{-- Hapus logika is_string() dan $s->size, karena $s sudah pasti string ukuran --}}
+                <button type="button"
+                        class="btn btn-outline-secondary btn-sm size-option"
+                        onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
+                    {{ $s }}
+                </button>
+            @endforeach
+        </div>
+    </div>
+@endif
 
 
                 {{-- Qty --}}
@@ -197,27 +200,31 @@ document.querySelectorAll('.color-btn').forEach(btn => {
     this.classList.add('active');
 
     // Update ukuran sesuai variant
-    const product = allProducts.find(p => p.id == id);
-    const variant = product.variants.find(v => v.color === color);
-    const sizesDiv = document.getElementById("sizes"+id);
-    sizesDiv.innerHTML = '';
+   const product = allProducts.find(p => p.id == id);
+        const variant = product.variants.find(v => v.color === color);
+        const sizesDiv = document.getElementById("sizes"+id);
+        sizesDiv.innerHTML = '';
 
-    if (variant.sizes.length > 0) {
-  variant.sizes.forEach(s => {
-    const sizeVal = typeof s === 'string' ? s : s.size;
-    const btn = document.createElement("button");
-    btn.className = "btn btn-outline-secondary btn-sm size-option";
-    btn.innerText = sizeVal;
-    btn.onclick = () => selectSize(id, sizeVal);
-    sizesDiv.appendChild(btn);
-  });
-} else {
-  const btn = document.createElement("button");
-  btn.className = "btn btn-outline-secondary btn-sm";
-  btn.innerText = "Tidak tersedia";
-  btn.disabled = true;
-  sizesDiv.appendChild(btn);
-}
+    if (variant.sizes && variant.sizes.length > 0) {
+            variant.sizes.forEach(s => {
+                // BARIS BARU: Langsung ambil s (karena s sudah string ukuran)
+                const sizeVal = s; 
+                
+                // BARIS LAMA DIHAPUS: const sizeVal = typeof s === 'string' ? s : s.size;
+                
+                const btn = document.createElement("button");
+                btn.className = "btn btn-outline-secondary btn-sm size-option";
+                btn.innerText = sizeVal;
+                btn.onclick = () => selectSize(id, sizeVal);
+                sizesDiv.appendChild(btn);
+            });
+        } else {
+          const btn = document.createElement("button");
+          btn.className = "btn btn-outline-secondary btn-sm";
+          btn.innerText = "Tidak tersedia";
+          btn.disabled = true;
+          sizesDiv.appendChild(btn);
+        }
 
     updateWa(id);
   });

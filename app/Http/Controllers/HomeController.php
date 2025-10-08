@@ -13,8 +13,10 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $allProducts = Product::with(['store', 'variants.sizes'])->get();
+        // Muat semua produk termasuk store dan variants. Relasi 'sizes' sudah dihapus.
+        $allProducts = Product::with(['store', 'variants'])->get();
 
+        // Siapkan data untuk JavaScript (JSON)
         $allProductsJs = $allProducts->map(function ($product) {
             return [
                 'id' => $product->id,
@@ -32,7 +34,7 @@ class HomeController extends Controller
                         'color' => $variant->color,
                         'img' => $variant->img ? asset('storage/' . $variant->img) : null,
                         'price' => $variant->price,
-                        'sizes' => $variant->sizes->pluck('size'),
+                        'sizes' => $variant->sizes ?? [],
                     ];
                 })
             ];

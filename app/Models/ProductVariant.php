@@ -11,15 +11,17 @@ class ProductVariant extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['product_id', 'color', 'img', 'price'];
-
+    protected $fillable = ['product_id', 'color', 'img', 'price', 'sizes'];
+    protected $casts = [
+        'sizes' => 'array', 
+    ];
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function sizes()
-    {
-        return $this->hasMany(ProductSize::class, 'variant_id');
-    }
+    // public function sizes()
+    // {
+    //     return $this->hasMany(ProductSize::class, 'variant_id');
+    // }
 }
