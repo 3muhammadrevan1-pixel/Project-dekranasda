@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\TbMenu;
 use App\Models\TbMenuData;
 use App\Models\StatisPage;
 

@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - 'main' # Tambahkan 'main' jika itu adalah branch utama Anda
+      - 'main'
       - '*.x'
   pull_request:
   schedule:
@@ -17,10 +17,21 @@ jobs:
   tests:
     runs-on: ubuntu-latest
 
+    # 1. --- BLOK BARU: DEFINISI SERVICE MYSQL ---
+    # Service ini membuat database sementara bernama 'testing_db' yang bisa diakses oleh tes.
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testing_db
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+
     strategy:
       fail-fast: true
       matrix:
-        # Kita akan tetap menguji di berbagai versi PHP, ini bagus
         php: [8.2, 8.3, 8.4] 
 
     name: PHP ${{ matrix.php }}
@@ -33,7 +44,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          # PASTIKAN EKSTENSI MYSQL ADA:
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, mysql, pdo_mysql
           coverage: none
 
       - name: Install Composer dependencies
@@ -41,23 +53,35 @@ jobs:
 
       - name: Copy environment file
         run: cp .env.example .env
+      
+      # 2. --- MODIFIKASI: SETUP ENV UNTUK KONEKSI MYSQL ---
+      # Mengubah file .env untuk menunjuk ke service MySQL yang baru dibuat
+      - name: Configure .env for MySQL Test Connection
+        run: |
+          sed -i 's/DB_CONNECTION=.*$/DB_CONNECTION=mysql/' .env
+          sed -i 's/DB_HOST=.*$/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_PORT=.*$/DB_PORT=3306/' .env
+          sed -i 's/DB_DATABASE=.*$/DB_DATABASE=testing_db/' .env
+          sed -i 's/DB_USERNAME=.*$/DB_USERNAME=root/' .env
+          sed -i 's/DB_PASSWORD=.*$/DB_PASSWORD=root/' .env
 
       - name: Generate app key
         run: php artisan key:generate
 
-      # --- PERBAIKAN DITAMBAHKAN DI SINI ---
+      # 3. --- LANGKAH PENTING: MIGRASI DAN SEEDING ---
+      - name: Wait for MySQL Service
+        # Menunggu sebentar agar service MySQL benar-benar siap
+        run: sleep 5
       
-      - name: Create Test Database (Migrate)
-        # Menjalankan migrasi database
-        # --env=testing: memastikan menggunakan konfigurasi database testing
-        # --force: diperlukan karena ini berjalan di environment non-interaktif
-        run: php artisan migrate --env=testing --force
-      
-      # Jika tes Anda juga membutuhkan data dummy (seperti akun admin), tambahkan ini:
-      # - name: Seed Database
-      #   run: php artisan db:seed --env=testing --force
-
-      # --- PERBAIKAN SELESAI ---
+      - name: Run Database Migrations
+        # Membuat semua tabel di database 'testing_db'
+        run: php artisan migrate --force
+        
+      # Anda HANYA perlu menjalankan seeder jika Home Controller membutuhkan data.
+      # Karena kode Anda memang butuh data, jalankan seeder:
+      - name: Seed Test Data
+        # Menambahkan data dummy minimal ke tabel yang baru dibuat
+        run: php artisan db:seed --class=TestingSeeder --force 
 
       - name: Execute tests
         run: php artisan test
