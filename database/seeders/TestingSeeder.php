@@ -59,12 +59,14 @@ class TestingSeeder extends Seeder
             ['slug' => 'program-kerja'],
             ['judul' => 'Program Kerja Tes', 'konten' => '[]']
         );
-
-        // 6️⃣ Tambahkan dummy menu (kalau belum ada)
         $menuBerita = DB::table('tb_menu')->where('nama', 'Berita')->first();
         if (!$menuBerita) {
             DB::table('tb_menu')->insert([
                 'nama' => 'Berita',
+                'parent_id' => 0,
+                'urutan' => 1, // ✅ tambahkan kolom urutan
+                'tipe' => 'dinamis',
+                'status' => 'aktif',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -75,11 +77,16 @@ class TestingSeeder extends Seeder
         if (!$menuGaleri) {
             DB::table('tb_menu')->insert([
                 'nama' => 'Galeri',
+                'parent_id' => 0,
+                'urutan' => 2, // ✅ urutan berbeda biar unik
+                'tipe' => 'dinamis',
+                'status' => 'aktif',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
             $menuGaleri = DB::table('tb_menu')->where('nama', 'Galeri')->first();
         }
+
 
         // 7️⃣ Buat TbMenuData dummy (Berita)
         \App\Models\TbMenuData::firstOrCreate(
