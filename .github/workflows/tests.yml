@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - 'main' # Tambahkan 'main' jika itu adalah branch utama Anda
       - '*.x'
   pull_request:
   schedule:
@@ -19,7 +20,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [8.2, 8.3, 8.4]
+        # Kita akan tetap menguji di berbagai versi PHP, ini bagus
+        php: [8.2, 8.3, 8.4] 
 
     name: PHP ${{ matrix.php }}
 
@@ -42,6 +44,20 @@ jobs:
 
       - name: Generate app key
         run: php artisan key:generate
+
+      # --- PERBAIKAN DITAMBAHKAN DI SINI ---
+      
+      - name: Create Test Database (Migrate)
+        # Menjalankan migrasi database
+        # --env=testing: memastikan menggunakan konfigurasi database testing
+        # --force: diperlukan karena ini berjalan di environment non-interaktif
+        run: php artisan migrate --env=testing --force
+      
+      # Jika tes Anda juga membutuhkan data dummy (seperti akun admin), tambahkan ini:
+      # - name: Seed Database
+      #   run: php artisan db:seed --env=testing --force
+
+      # --- PERBAIKAN SELESAI ---
 
       - name: Execute tests
         run: php artisan test
