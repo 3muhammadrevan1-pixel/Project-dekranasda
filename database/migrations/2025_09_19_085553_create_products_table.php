@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('desc')->nullable();
             $table->string('img')->nullable();
             $table->string('category');
-            $table->string('type')->nullable(); // baju, sepatu, tas, none
+            $table->string('type')->nullable(); // baju, sepatu, none
             $table->integer('price')->nullable(); 
             $table->timestamps();
         });

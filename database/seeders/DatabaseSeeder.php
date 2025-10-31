@@ -21,14 +21,21 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        $this->call([
-        GallerySeeder::class,
-        NewsSeeder::class,
-        ProductSeeder::class,
-        EventSeeder::class,
-        OrganisasiSeeder::class,
-        StoreSeeder::class,
-        ProgramKerjaSeeder::class,
-    ]);
+         $this->call([
+            MenuSeeder::class, 
+            
+            // Seeder yang bergantung pada MenuSeeder
+            GallerySeeder::class,
+            NewsSeeder::class,
+            EventSeeder::class,
+            OrganisasiSeeder::class,
+        
+            
+            // Seeder lain yang bersifat independen
+            ProductSeeder::class,
+            StoreSeeder::class,
+            StatisPageSeeder::class,
+            
+        ]);
     }
 }

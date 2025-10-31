@@ -23,6 +23,7 @@ class ProductController extends Controller
             return [
                 'id'    => $product->id,
                 'name'  => $product->name,
+                'type'  => $product->type,
                 'img'   => $product->img ? asset('storage/' . $product->img) : null,
                 'price' => $product->price,
                 'desc'  => $product->desc,

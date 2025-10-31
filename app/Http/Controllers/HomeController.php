@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Gallery;
-use App\Models\News;
 use App\Models\Product;
-use App\Models\Program;
+use App\Models\TbMenuData;
+use App\Models\StatisPage;
 
 use Illuminate\Http\Request;
+
 
 class HomeController extends Controller
 {
     public function index()
     {
-        // Muat semua produk termasuk store dan variants. Relasi 'sizes' sudah dihapus.
+        // Muat semua produk termasuk store dan variants.
         $allProducts = Product::with(['store', 'variants'])->get();
 
         // Siapkan data untuk JavaScript (JSON)
@@ -34,26 +34,38 @@ class HomeController extends Controller
                         'color' => $variant->color,
                         'img' => $variant->img ? asset('storage/' . $variant->img) : null,
                         'price' => $variant->price,
-                        'sizes' => $variant->sizes ?? [],
+                        // Asumsi sizes sudah tidak ada di model variant, hanya untuk jaga-jaga
+                       'sizes' => $variant->sizes ?? [],
                     ];
                 })
             ];
         });
 
-        $galeri = Gallery::take(6)->get();
-        $news = News::latest()->take(6)->get();
+        $galeri = TbMenuData::ofJenis('galeri')->take(6)->get();
 
-        $programKerja = Program::all()
-            ->groupBy('bidang')
-            ->map(fn($items, $bidang) => [
-                'bidang' => $bidang,
-                'program' => $items->map(fn($item) => [
-                    'judul' => $item->judul,
-                    'deskripsi' => $item->deskripsi
-                ])
-            ])->values();
 
-        return view('home', compact('programKerja', 'news', 'galeri', 'allProducts', 'allProductsJs'))
-            ->with('title', 'Beranda - Dekranasda Kota Bogor');
+        $news = TbMenuData::ofJenis('berita')->latest()->take(6)->get();
+        // 🔸 Ambil Visi Misi Fokus
+        $visiMisiPage = StatisPage::where('slug', 'visi-misi')->first();
+        $visiMisi = $visiMisiPage ? json_decode($visiMisiPage->konten, true) : [];
+
+        $visi = $visiMisi[0] ?? ['title' => '', 'text' => ''];
+        $misi = $visiMisi[1] ?? ['title' => '', 'text' => ''];
+        $fokus = $visiMisi[2] ?? ['title' => '', 'text' => ''];
+
+        // 🔸 Ambil Program Kerja
+        $programKerjaPage = StatisPage::where('slug', 'program-kerja')->first();
+        $programKerja = $programKerjaPage ? json_decode($programKerjaPage->konten, true) : [];
+
+        return view('home', compact(
+            'news',
+            'galeri',
+            'allProducts',
+            'allProductsJs',
+            'visi',
+            'misi',
+            'fokus',
+            'programKerja'
+        ))->with('title', 'Beranda - Dekranasda Kota Bogor');
     }
 }
