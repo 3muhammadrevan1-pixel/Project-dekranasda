@@ -102,11 +102,9 @@
     </div>
 </section>
 
-
 <section class="container py-5 position-relative">
     <h2 class="section-title mb-4 text-center">Produk Unggulan</h2>
 
-    <!-- Tombol Navigasi -->
     <button class="scroll-btn left" onclick="scrollProduk(-1)">&#10094;</button>
     <button class="scroll-btn right" onclick="scrollProduk(1)">&#10095;</button>
 
@@ -119,6 +117,10 @@
                     // Prioritaskan: 1. Gambar Utama ($pr->img) -> 2. Gambar Varian Pertama -> 3. Default
                     $productImg = $pr->img ?? optional($firstVariant)->img ?? 'assets/default.jpg'; 
                     $productPrice = $pr->price ?? optional($firstVariant)->price ?? 0;
+                    
+                    // 💡 PERBAIKAN 1: Logika untuk mendapatkan Ukuran yang Tersedia dari Varian Pertama
+                    $availableSizes = optional($firstVariant)->sizes ?? [];
+                    $availableSizes = array_filter($availableSizes);
                 @endphp
 
                 <div class="product-card flex-shrink-0 me-3">
@@ -134,17 +136,14 @@
                     </div>
                 </div>
 
-                <!-- Modal Produk Unggulan -->
                 <div class="modal fade" id="productModal{{ $pr->id }}" tabindex="-1">
                     <div class="modal-dialog modal-xl modal-dialog-centered">
                         <div class="modal-content p-0 border-0 rounded-3 shadow-lg overflow-hidden position-relative">
                             <div class="row g-0">
-                                <!-- Gambar -->
                                 <div class="col-md-6 bg-light d-flex flex-column align-items-center justify-content-center p-4">
                                     <img id="mainImg{{ $pr->id }}" src="{{ $productImg }}" alt="{{ $pr->name }}" class="img-fluid">
                                 </div>
 
-                                <!-- Detail -->
                                 <div class="col-md-6 p-4 d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <h4 class="modal-title">{{ $pr->name }}</h4>
@@ -168,31 +167,22 @@
                                             <div class="d-flex flex-wrap gap-2">
                                                 @foreach($pr->variants as $variant)
                                                     <button type="button"
-                                                            class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}"
+                                                            class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}" {{-- 💡 PERBAIKAN 2: Tambah class 'active' --}}
                                                             data-product="{{ $pr->id }}"
                                                             data-color="{{ $variant->color }}"
                                                             data-img="{{ $variant->img ?? $productImg }}"
                                                             data-price="{{ $variant->price ?? $productPrice }}">
-                                                            {{ ucfirst($variant->color) }}
+                                                        {{ ucfirst($variant->color) }}
                                                     </button>
                                                 @endforeach
                                             </div>
                                         </div>
 
-                                        {{-- Pilih Ukuran (FIXED: Menggunakan logic array karena model casting) --}}
-                                        @php
-                                            // Ambil data ukuran dari variant pertama. Karena model casting, ini sudah berupa Array atau null.
-                                            $availableSizes = optional($firstVariant)->sizes ?? [];
-                                            // Pastikan $availableSizes adalah array yang berisi item non-null/non-empty, 
-                                            // misalnya jika data yang disimpan adalah ['S', 'M', null, 'L']
-                                            $availableSizes = array_filter($availableSizes);
-                                        @endphp
-                                        
-                                        @if(!empty($availableSizes))
+                                        {{-- Pilih Ukuran --}}
+                                        @if(!empty($availableSizes)) {{-- 💡 PERBAIKAN 3: Tampilkan Ukuran hanya jika ada data --}}
                                             <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
                                                 <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
                                                 <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
-                                                    {{-- Sekarang $availableSizes adalah array PHP biasa --}}
                                                     @foreach($availableSizes as $s)
                                                         <button type="button"
                                                                 class="btn btn-outline-secondary btn-sm size-option"

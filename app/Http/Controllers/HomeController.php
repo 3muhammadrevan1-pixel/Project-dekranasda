@@ -35,7 +35,7 @@ class HomeController extends Controller
                         'img' => $variant->img ? asset('storage/' . $variant->img) : null,
                         'price' => $variant->price,
                         // Asumsi sizes sudah tidak ada di model variant, hanya untuk jaga-jaga
-                        'sizes' => property_exists($variant, 'sizes') ? $variant->sizes : [],
+                       'sizes' => $variant->sizes ?? [],
                     ];
                 })
             ];
