@@ -33,9 +33,11 @@ class TestingSeeder extends Seeder
         $product = Product::create([
             'store_id' => $store->id,
             'name' => 'Produk Tes Utama',
+             'category' => 'Unggulan', // tambahkan ini
             'price' => 100000,
             'desc' => 'Deskripsi produk untuk tes fitur.',
-            'img' => 'dummy/product.png', // Tambahkan placeholder image path
+            'img' => 'dummy/product.png', 
+            'type'=> 'none'
         ]);
 
         // 3. Buat Variant (Varian Produk) dummy
