@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Models\StatisPage;
 use App\Models\TbMenuData;
 use App\Models\Store;
-use App\Models\ProductVariant;
+use App\Models\ProductVariant; // DIUBAH: Menggunakan ProductVariant
 use Illuminate\Support\Str;
 
 class TestingSeeder extends Seeder
@@ -40,7 +40,7 @@ class TestingSeeder extends Seeder
 
         // 3. Buat Variant (Varian Produk) dummy
         // PERBAIKAN: Menggunakan ProductVariant::create dan menambahkan kolom 'sizes' (JSON)
-        ProductVariant::create([
+        ProductVariant::create([ // DIUBAH: Menggunakan ProductVariant
             'product_id' => $product->id,
             'color' => 'Merah',
             'price' => 105000,
