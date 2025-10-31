@@ -52,7 +52,7 @@ class GallerySeeder extends Seeder
                 'img' => $img, // Awalan 'storage/' ditambahkan di sini
 
                 // FIX: Menggunakan string kosong ('') BUKAN NULL, karena kolom 'title' adalah NOT NULL.
-                'title' => '',
+                'title' => null,
                 'content' => null,
 
                 'location' => null,
