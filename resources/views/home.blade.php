@@ -11,94 +11,98 @@
         <a href="{{ url('/produk') }}" class="btn btn-custom mt-3">Lihat Produk</a>
     </div>
 </header>
-
 <!-- Tentang -->
 <section id="tentang" class="py-5" style="background:#fffaf6;">
     <div class="container">
-        <div class="row align-items-center g-4">
+        <div class="row align-items-center g-5">
             
             <!-- Foto -->
             <div class="col-lg-6 col-md-12 text-center text-lg-start">
-                <img src="{{ asset('assets/visi.png') }}" alt="Dekranasda Kota Bogor" class="img-fluid rounded-4 shadow-sm mb-4 mb-lg-0" style="max-width:100%;">
+                <img src="{{ asset('assets/visi.png') }}" alt="Dekranasda Kota Bogor" 
+                     class="img-fluid rounded-4 shadow-sm" style="max-width:100%;">
             </div>
             
             <!-- Teks + Card -->
             <div class="col-lg-6 col-md-12">
                 <h2 class="fw-bold text-brown mb-3">Tentang Dekranasda Kota Bogor</h2>
-                <p class="mb-4">
-                    Dekranasda (Dewan Kerajinan Nasional Daerah) Kota Bogor adalah wadah yang dibentuk untuk 
-                    membina, mengembangkan, dan memajukan kerajinan daerah. Keberadaannya bertujuan untuk 
-                    mendukung para pengrajin lokal agar mampu meningkatkan kualitas produk, memperluas pemasaran, 
-                    serta menjaga kelestarian budaya dan kearifan lokal Kota Bogor. 	
+                <p class="mb-4 text-secondary">
+                    Dekranasda (Dewan Kerajinan Nasional Daerah) Kota Bogor merupakan wadah pembinaan dan pengembangan 
+                    kerajinan daerah untuk meningkatkan daya saing, memperluas pemasaran, serta menjaga kelestarian budaya 
+                    dan kearifan lokal melalui pemberdayaan pengrajin lokal.
                 </p>
 
-                <div class="row g-3">
+                <!-- Visi Misi Fokus -->
+                <div class="row g-3 mt-4">
                     <div class="col-md-4 d-flex">
-                        <div class="info-card text-center flex-fill">
-                            <i class="bi bi-eye-fill icon"></i>
-                            <h6 class="fw-bold mt-3">Visi</h6>
-                            <p class="mb-0">Menjadi pusat pengembangan kerajinan lokal kreatif dan berkelanjutan.</p>
+                        <div class="info-card text-center flex-fill bg-white p-4 rounded-4 shadow-sm">
+                            <i class="bi bi-eye-fill icon text-brown fs-3"></i>
+                            <h6 class="fw-bold mt-3">{{ $visi['title'] ?? 'Visi' }}</h6>
+                            <p class="mb-0 small text-muted">{{ $visi['text'] ?? '' }}</p>
                         </div>
                     </div>
                     <div class="col-md-4 d-flex">
-                        <div class="info-card text-center flex-fill">
-                            <i class="bi bi-bullseye icon"></i>
-                            <h6 class="fw-bold mt-3">Misi</h6>
-                            <p class="mb-0">Memberdayakan pengrajin, memfasilitasi pemasaran, dan melestarikan budaya.</p>
+                        <div class="info-card text-center flex-fill bg-white p-4 rounded-4 shadow-sm">
+                            <i class="bi bi-bullseye icon text-brown fs-3"></i>
+                            <h6 class="fw-bold mt-3">{{ $misi['title'] ?? 'Misi' }}</h6>
+                            <p class="mb-0 small text-muted">{{ $misi['text'] ?? '' }}</p>
                         </div>
                     </div>
                     <div class="col-md-4 d-flex">
-                        <div class="info-card text-center flex-fill">
-                            <i class="bi bi-box-seam icon"></i>
-                            <h6 class="fw-bold mt-3">Fokus</h6>
-                            <p class="mb-0">Anyaman, batik, ukiran kayu, dan produk kreatif khas Bogor.</p>
+                        <div class="info-card text-center flex-fill bg-white p-4 rounded-4 shadow-sm">
+                            <i class="bi bi-box-seam icon text-brown fs-3"></i>
+                            <h6 class="fw-bold mt-3">{{ $fokus['title'] ?? 'Fokus' }}</h6>
+                            <p class="mb-0 small text-muted">{{ $fokus['text'] ?? '' }}</p>
                         </div>
                     </div>
-                </div> 
+                </div>
             </div> 
         </div> 
     </div> 
 </section>
 
 <!-- Program Kerja -->
-<section id="program-kerja" class="container py-5">
-    <h2 class="section-title">Program Kerja 2025</h2>
-    <div class="accordion" id="accordionProgramKerja">
-        @foreach ($programKerja as $index => $bidang)
-            <div class="accordion-item shadow-sm mb-3" style="border-radius:12px; overflow:hidden;">
-                <h2 class="accordion-header" id="heading{{ $index }}">
-                    <button class="accordion-button collapsed fw-bold" type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#collapse{{ $index }}"
-                        aria-expanded="false"
-                        aria-controls="{{ $index }}">
-                        <i class="bi bi-diagram-3-fill me-2 text-brown"></i>
-                        {{ $bidang['bidang'] }}
-                    </button>
-                </h2>
-
-                <div id="collapse{{ $index }}" class="accordion-collapse collapse"
-                    aria-labelledby="heading{{ $index }}"
-                    data-bs-parent="#accordionProgramKerja">
-                    <div class="accordion-body">
-                        <div class="row g-4">
-                            @foreach ($bidang['program'] as $prog)
-                                <div class="col-md-6">
-                                    <div class="p-3 bg-white rounded shadow-sm h-100">
-                                        <h6 class="fw-bold text-brown mb-2">
-                                            <i class="bi bi-check-circle-fill text-success me-1"></i> {{ $prog['judul'] }}
-                                        </h6>
-                                        <p class="mb-0 small">{{ $prog['deskripsi'] }}</p>
+<section id="program-kerja" class="py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title">Program Kerja 2025</h2>
+        <div class="accordion" id="accordionProgramKerja">
+            @foreach ($programKerja as $index => $bidang)
+                <div class="accordion-item shadow-lg mb-4 border-0 rounded-4 overflow-hidden">
+                    <h2 class="accordion-header" id="heading{{ $index }}">
+                        <button class="accordion-button collapsed fw-bold text-dark" type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapse{{ $index }}"
+                            aria-expanded="false"
+                            aria-controls="collapse{{ $index }}">
+                            <i class="bi bi-diagram-3-fill me-2 text-brown"></i>
+                            {{ $bidang['bidang'] }}
+                        </button>
+                    </h2>
+                    <div id="collapse{{ $index }}" class="accordion-collapse collapse"
+                        aria-labelledby="heading{{ $index }}"
+                        data-bs-parent="#accordionProgramKerja">
+                        <div class="accordion-body bg-white">
+                            <div class="row g-4">
+                                @foreach ($bidang['program'] as $prog)
+                                    <div class="col-md-6">
+                                        <div class="p-4 bg-light rounded-4 shadow-sm h-100 border-start border-4 border-brown">
+                                            <h6 class="fw-bolder text-dark mb-2">
+                                                <i class="bi bi-patch-check-fill text-success me-2"></i>
+                                                {{ $prog['judul'] }}
+                                            </h6>
+                                            <p class="mb-0 small text-muted">{{ $prog['deskripsi'] }}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        @endforeach
+            @endforeach
+        </div>
     </div>
 </section>
+
+
 <section class="container py-5 position-relative">
     <h2 class="section-title mb-4 text-center">Produk Unggulan</h2>
 
@@ -226,46 +230,58 @@
     </div>
 </section>
 
-
 <!-- Berita Compact Responsive Swipe -->
 <section id="berita" class="container py-5">
     <h2 class="section-title mb-4 text-center">Berita Terkini</h2>
     <div class="row g-4">
+        {{-- Loop menggunakan variabel $news dari HomeController --}}
         @foreach ($news as $n)
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm border-0">
-            <img src="{{ asset('storage/'.$n->img) }}" class="card-img-top" alt="{{ $n->title }}">
-            <div class="card-body d-flex flex-column">
-                <h5 class="card-title">{{ $n->title }}</h5>
-                <small class="text-muted mb-2">{{ $n->date }}</small>
-                <p class="card-text flex-grow-1">
-                    {{ Str::limit(strip_tags($n->content), 100) }}
-                </p>
-                <a href="{{ route('berita.show', $n->id) }}" class="btn btn-custom mt-auto">
-                    Baca Selengkapnya
-                </a>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0">
+                    {{-- Mengakses kolom 'img' --}}
+                    <img src="{{ asset('storage/'.$n->img) }}" class="card-img-top" alt="{{ $n->title }}">
+                    <div class="card-body d-flex flex-column">
+                        {{-- Mengakses kolom 'title' --}}
+                        <h5 class="card-title">{{ $n->title }}</h5>
+                        
+                        {{-- FIX: Memformat kolom 'date' menjadi tanggal cantik --}}
+                        <small class="text-muted mb-2">{{ \Carbon\Carbon::parse($n->date)->format('d F Y') }}</small>
+                        
+                        <p class="card-text flex-grow-1">
+                            {{-- Mengakses kolom 'content' --}}
+                            {{ Str::limit(strip_tags($n->content), 100) }}
+                        </p>
+                        
+                        {{-- Link ke detail berita --}}
+                        <a href="{{ route('berita.show', $n->id) }}" class="btn btn-custom mt-auto">
+                            Baca Selengkapnya
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-@endforeach
+        @endforeach
     </div>
 </section>
 
 
-<!-- Galeri -->
-<section id="galeri" class="container py-5">
+
+<!-- Galeri --><section id="galeri" class="container py-5">
     <h2 class="section-title">Galeri</h2>
-   <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+        {{-- Loop menggunakan variabel $galeri --}}
         @foreach ($galeri as $i => $g)
             <div class="col-6 col-md-4 col-lg-3">
-        <div class="card h-100 border-0 shadow-sm d-flex flex-column">
-            <div style="aspect-ratio: 4/3; overflow: hidden; border-radius:10px;">
-                <img src="{{ asset($g->img) }}" class="img-fluid gallery-img" alt="Galeri {{ $i+1 }}" 
-                    data-bs-toggle="modal" data-bs-target="#galeriModal" data-index="{{ $i }}" 
-                    style="width:100%; height:100%; object-fit:cover;">
+                <div class="card h-100 border-0 shadow-sm d-flex flex-column">
+                    <div style="aspect-ratio: 4/3; overflow: hidden; border-radius:10px;">
+                        {{-- FIX 1: Menggunakan asset('storage/') --}}
+                        <img src="{{ asset('storage/' . $g->img) }}" 
+                            class="img-fluid gallery-img" 
+                            alt="{{ $g->title ?? 'Galeri ' . ($i+1) }}" 
+                            data-bs-toggle="modal" data-bs-target="#galeriModal" data-index="{{ $i }}" 
+                            style="width:100%; height:100%; object-fit:cover;">
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
         @endforeach
     </div>
 
@@ -297,6 +313,7 @@
         </div>
     </div>
 </div>
+
 @endsection
 @section('scripts')
 <script>
@@ -432,10 +449,13 @@ function scrollProduk(direction){
     container.scrollBy({ left: direction*cardWidth, behavior:'smooth' });
 }
 
-// === GALLERY MODAL ===
+
+// --- FIX 2: SCRIPT GALERI DENGAN URL STORAGE YANG BENAR ---
+// Data galeri dari controller, pastikan URL storage-nya benar
+const galleryImages = @json($galeri->map(fn($g) => asset('storage/' . $g->img)));
 let currentIndex = 0;
-const galleryImages = @json($galeri->map(fn($g) => asset($g->img)));
 const modalImg = document.getElementById('modalImg');
+
 function showImage(index){
     if(modalImg && galleryImages[index]){
         modalImg.style.opacity=0;
@@ -458,7 +478,6 @@ document.getElementById('nextImg')?.addEventListener('click', ()=>{
     if(!galleryImages.length) return;
     showImage((currentIndex+1)%galleryImages.length);
 });
-
 // Navbar scroll
 window.addEventListener('scroll', ()=>{
     const navbar = document.querySelector('.navbar');

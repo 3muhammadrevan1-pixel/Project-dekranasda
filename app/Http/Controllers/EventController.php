@@ -4,64 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Event;
+use App\Models\TbMenuData; // Menggunakan Model data pusat
 
 class EventController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar semua event (Index).
+     * Menggunakan scope ofJenis('event') untuk memfilter data.
      */
     public function index()
     {
-         $events = Event::all(); // ambil semua dari DB
-        return view('events.index', compact('events'));
+        // Ambil semua data dengan jenis_konten = 'event' dan paginasi
+        $eventList = TbMenuData::ofJenis('event')->latest()->paginate(12);
+
+        // Mengirimkan variabel $eventList ke view
+        return view('events.index', compact('eventList'));
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
+     * Menampilkan detail spesifik dari satu event (Show).
      */
     public function show(string $id)
     {
-        //
-    }
+        // Cari data berdasarkan ID, pastikan jenis_konten = 'event'.
+        // Jika tidak ditemukan, otomatis melempar error 404.
+        $event = TbMenuData::ofJenis('event')->findOrFail($id);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        // Mengirimkan variabel $event ke view
+        return view('events.show', compact('event'));
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    
+    // Fungsi-fungsi CRUD (create, store, edit, update, destroy) dihapus
+    // karena sudah ditangani oleh AdminMenuDataController.
 }

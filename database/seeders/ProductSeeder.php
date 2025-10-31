@@ -69,7 +69,7 @@ class ProductSeeder extends Seeder
         $productsStore1 = [
             [
                 'name'      => 'Tas Anyaman Bambu',
-                'category'  => 'Unggulan',
+                'category'  => 'Terbaru',
                 'img'       => '/storage/produk/pk6.jpg',
                 'price'     => 150000,
                 'desc'      => 'Tas anyaman bambu buatan pengrajin lokal.',
@@ -148,7 +148,7 @@ class ProductSeeder extends Seeder
                 'price'     => 200000,
                 'desc'      => 'Tas rajut dari Elcraft yang unik dan cantik.',
                 'store_id'  => $store2->id,
-                'type'      => 'tas'
+                'type'      => 'none'
             ]
         ];
 

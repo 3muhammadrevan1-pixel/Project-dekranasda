@@ -86,18 +86,22 @@
                 @endif
 
               
-                {{-- Ukuran --}}
-                  {{-- Ukuran --}}
+             
+          {{-- Ukuran --}}
+          {{-- // Ambil tipe dari produk. Jika null, anggap 'none' untuk amannya. --}}
 @php
-    $firstVariant = $pr->variants->first();
+ $firstVariant = $pr->variants->first();
+
+ $productType = strtolower($pr->type ?? 'none'); 
 @endphp
-{{-- CEK BARU: Pastikan sizes adalah array dan tidak kosong --}}
-@if($firstVariant && is_array($firstVariant->sizes) && count($firstVariant->sizes))
+
+{{-- Tampilkan Ukuran HANYA JIKA type BUKAN 'none' DAN ukuran tersedia di varian pertama --}}
+@if($productType != 'none' && $firstVariant && is_array($firstVariant->sizes) && count($firstVariant->sizes))
+
     <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
         <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
         <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
             @foreach($firstVariant->sizes as $s)
-                {{-- Hapus logika is_string() dan $s->size, karena $s sudah pasti string ukuran --}}
                 <button type="button"
                         class="btn btn-outline-secondary btn-sm size-option"
                         onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
@@ -107,7 +111,6 @@
         </div>
     </div>
 @endif
-
 
                 {{-- Qty --}}
                 <label class="fw-semibold mb-1">Jumlah:</label>
@@ -247,13 +250,15 @@ function switchModal(currentId, targetId) {
   bootstrap.Modal.getInstance(current).hide();
   new bootstrap.Modal(target).show();
 }
-
 // === UPDATE WA ===
 function sendWA(productId){
   const pr = allProducts.find(p => p.id == productId);
   if(!pr) return;
 
   const qty = document.getElementById('qty'+productId).value || 1;
+  
+  // Ambil nilai Warna dan Ukuran
+  // Nilai akan berupa string kosong ('') jika tidak ada yang dipilih.
   const selectedColor = document.querySelector('#productModal'+productId+' .color-btn.active')?.innerText || '';
   const selectedSize = document.querySelector('#sizes'+productId+' .size-option.active')?.innerText || '';
 
@@ -262,13 +267,16 @@ function sendWA(productId){
   const storeName = waBtn.dataset.storeName || (pr.store?.name || '');
   const storeAddress = waBtn.dataset.storeAddress || (pr.store?.alamat || '');
 
+  // Logika untuk membangun bagian Warna dan Ukuran secara kondisional.
+  // Jika nilainya ada, tambahkan baris dan newline (\n). Jika tidak ada, hasilnya string kosong.
+  let colorLine = selectedColor ? `Warna: ${selectedColor}\n` : '';
+  let sizeLine = selectedSize ? `Ukuran: ${selectedSize}\n` : '';
+
   const message = `Halo Admin, saya ingin memesan:
 Produk: ${pr.name}
 Toko: ${storeName}
 Alamat: ${storeAddress}
-Warna: ${selectedColor}
-Ukuran: ${selectedSize}
-Jumlah: ${qty}`;
+${colorLine}${sizeLine}Jumlah: ${qty}`;
 
   const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
   window.open(waUrl,'_blank');

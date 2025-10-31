@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('programs', function (Blueprint $table) {
+        Schema::create('statis_pages', function (Blueprint $table) {
             $table->id();
-            $table->string('bidang');
             $table->string('judul');
-            $table->text('deskripsi');
+            $table->string('slug')->unique();
+            $table->longText('konten')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('programs');
+        Schema::dropIfExists('statis_pages');
     }
 };

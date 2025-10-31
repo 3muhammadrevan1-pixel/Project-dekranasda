@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\OrganisasiController;
 use App\Http\Controllers\GaleriController;
+use App\Http\Controllers\StatisPageController;
 
 // Home route (semua tampilan: berita, galeri, program kerja, produk, dll)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -22,7 +23,9 @@ Route::get('/produk', [ProductController::class, 'index'])->name('produk.index')
 Route::get('/galeri', [GaleriController::class, 'index'])->name('galeri.index');
 
 Route::get('/event', [EventController::class, 'index'])->name('events.index');
+// Tentang Kami
 Route::prefix('about')->group(function () {
-    Route::view('/sejarah', 'about.sejarah')->name('about.sejarah');
+    Route::get('/sejarah', [StatisPageController::class, 'sejarah'])->name('about.sejarah');
     Route::resource('organisasi', OrganisasiController::class)->only(['index']);
 });
+// Route::get('/statis-page/{slug}', [StatisPageController::class, 'index']);
