@@ -20,7 +20,7 @@ return new class extends Migration
                   ->onDelete('cascade'); // Jika menu induk dihapus, datanya ikut terhapus
             
             $table->string('jenis_konten', 50)->comment('Kunci Pembeda: news, event, program, gallery');
-            $table->string('title', 255);
+            $table->string('title', 255)->nullable();
             $table->longText('content')->nullable();
             $table->string('img', 255)->nullable(); // Link Gambar
             $table->date('date')->nullable();

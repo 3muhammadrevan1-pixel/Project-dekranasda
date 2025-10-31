@@ -7,85 +7,76 @@ use App\Models\Product;
 use App\Models\StatisPage;
 use App\Models\TbMenuData;
 use App\Models\Store;
-use App\Models\ProductVariant; // DIUBAH: Menggunakan ProductVariant
+use App\Models\ProductVariant;
 use Illuminate\Support\Str;
 
 class TestingSeeder extends Seeder
 {
     /**
      * Jalankan seed database.
-     * Data di sini berfungsi sebagai data dummy minimal
-     * agar HomeController@index dapat mengambil data tanpa error.
+     * Data ini sebagai data dummy minimal agar HomeController@index tidak error.
      */
     public function run()
     {
-        // Pastikan model yang dibutuhkan oleh Product::with(['store', 'variants']) ada
-        
-        // 1. Buat Store (Toko) dummy
+        // 1. Buat Store dummy
         $store = Store::create([
             'name' => 'Toko Dummy Dekranasda',
             'alamat' => 'Alamat Tes',
             'telepon' => '12345',
-            // 'deskripsi' => 'Deskripsi Toko Tes', // BARIS INI DIHAPUS KARENA TIDAK DITEMUKAN DI MIGRATION
         ]);
 
-        // 2. Buat Product (Produk) dummy
+        // 2. Buat Product dummy
         $product = Product::create([
             'store_id' => $store->id,
             'name' => 'Produk Tes Utama',
-             'category' => 'Unggulan', // tambahkan ini
+            'category' => 'Unggulan',
             'price' => 100000,
             'desc' => 'Deskripsi produk untuk tes fitur.',
-            'img' => 'dummy/product.png', 
-            'type'=> 'none'
+            'img' => 'dummy/product.png',
+            'type' => 'none',
         ]);
 
-        // 3. Buat Variant (Varian Produk) dummy
-        // PERBAIKAN: Menggunakan ProductVariant::create dan menambahkan kolom 'sizes' (JSON)
-        ProductVariant::create([ // DIUBAH: Menggunakan ProductVariant
+        // 3. Buat Variant dummy
+        ProductVariant::create([
             'product_id' => $product->id,
             'color' => 'Merah',
             'price' => 105000,
             'img' => 'dummy/variant.png',
-            'sizes' => json_encode(['S', 'M', 'L', 'XL']), // Tambahkan kolom sizes
+            'sizes' => json_encode(['S', 'M', 'L', 'XL']),
         ]);
-        
-        // 4. Buat StatisPage (untuk Visi Misi dan Program Kerja)
-        // PERBAIKAN: Menghapus kolom 'jenis'
-        // HomeController@index memanggil StatisPage::where('slug', 'visi-misi')->first()
+
+        // 4. Buat StatisPage dummy (Visi Misi)
         StatisPage::create([
             'judul' => 'Visi Misi Tes',
             'slug' => 'visi-misi',
-            // Konten harus berupa JSON valid agar json_decode tidak error
             'konten' => json_encode([
-                ['title' => 'Visi', 'text' => 'Visi Tes'], 
-                ['title' => 'Misi', 'text' => 'Misi Tes']
+                ['title' => 'Visi', 'text' => 'Visi Tes'],
+                ['title' => 'Misi', 'text' => 'Misi Tes'],
             ]),
-            // 'jenis' => 'halaman' // BARIS INI DIHAPUS SESUAI PERMINTAAN
         ]);
 
-        // HomeController@index memanggil StatisPage::where('slug', 'program-kerja')->first()
+        // 5. Buat StatisPage dummy (Program Kerja)
         StatisPage::create([
             'judul' => 'Program Kerja Tes',
             'slug' => 'program-kerja',
             'konten' => '[]',
-            // 'jenis' => 'halaman' // BARIS INI DIHAPUS SESUAI PERMINTAAN
         ]);
-TbMenuData::create([
-    'menu_id' => 3, // misalnya 3 = untuk menu Berita
-    'title' => 'Berita Tes 1',
-    'jenis_konten' => 'berita',
-    'content' => 'Konten berita dummy.',
-    'img' => 'dummy/news.png',
-]);
 
-TbMenuData::create([
-    'menu_id' => 4, // misalnya 4 = untuk menu Galeri
-    'title' => 'Galeri Tes 1',
-    'jenis_konten' => 'galeri',
-    'content' => 'Konten galeri dummy.',
-    'img' => 'dummy/gallery.png',
-]);
+        // 6. Buat TbMenuData dummy (Berita)
+        TbMenuData::create([
+            'menu_id' => 3, // misalnya 3 = menu Berita
+            'jenis_konten' => 'berita',
+            'title' => 'beritaa tai',
+            'content' => 'Konten berita dummy.',
+            'img' => 'dummy/news.png',
+        ]);
 
+        // 7. Buat TbMenuData dummy (Galeri)
+        TbMenuData::create([
+            'menu_id' => 4, // misalnya 4 = menu Galeri
+            'jenis_konten' => 'galeri',
+            'content' => 'Konten galeri dummy.',
+            'img' => 'dummy/gallery.png',
+        ]);
     }
 }
