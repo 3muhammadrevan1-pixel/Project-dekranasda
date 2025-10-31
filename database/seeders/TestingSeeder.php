@@ -8,75 +8,100 @@ use App\Models\StatisPage;
 use App\Models\TbMenuData;
 use App\Models\Store;
 use App\Models\ProductVariant;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class TestingSeeder extends Seeder
 {
-    /**
-     * Jalankan seed database.
-     * Data ini sebagai data dummy minimal agar HomeController@index tidak error.
-     */
     public function run()
     {
-        // 1. Buat Store dummy
-        $store = Store::create([
-            'name' => 'Toko Dummy Dekranasda',
-            'alamat' => 'Alamat Tes',
-            'telepon' => '12345',
-        ]);
+        // 1️⃣ Nonaktifkan foreign key check sementara
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
-        // 2. Buat Product dummy
-        $product = Product::create([
-            'store_id' => $store->id,
-            'name' => 'Produk Tes Utama',
-            'category' => 'Unggulan',
-            'price' => 100000,
-            'desc' => 'Deskripsi produk untuk tes fitur.',
-            'img' => 'dummy/product.png',
-            'type' => 'none',
-        ]);
+        // 2️⃣ Buat Store dummy kalau belum ada
+        $store = \App\Models\Store::firstOrCreate(
+            ['name' => 'Toko Dummy Dekranasda'],
+            ['alamat' => 'Alamat Tes', 'telepon' => '12345']
+        );
 
-        // 3. Buat Variant dummy
-        ProductVariant::create([
-            'product_id' => $product->id,
-            'color' => 'Merah',
-            'price' => 105000,
-            'img' => 'dummy/variant.png',
-            'sizes' => json_encode(['S', 'M', 'L', 'XL']),
-        ]);
+        // 3️⃣ Buat Product dummy kalau belum ada
+        $product = \App\Models\Product::firstOrCreate(
+            ['name' => 'Produk Tes Utama'],
+            [
+                'store_id' => $store->id,
+                'category' => 'Unggulan',
+                'price' => 100000,
+                'desc' => 'Deskripsi produk untuk tes fitur.',
+                'img' => 'dummy/product.png',
+                'type' => 'none',
+            ]
+        );
 
-        // 4. Buat StatisPage dummy (Visi Misi)
-        StatisPage::create([
-            'judul' => 'Visi Misi Tes',
-            'slug' => 'visi-misi',
-            'konten' => json_encode([
+        // 4️⃣ Buat Variant dummy
+        \App\Models\ProductVariant::firstOrCreate(
+            ['product_id' => $product->id, 'color' => 'Merah'],
+            [
+                'price' => 105000,
+                'img' => 'dummy/variant.png',
+                'sizes' => json_encode(['S', 'M', 'L', 'XL']),
+            ]
+        );
+
+        // 5️⃣ StatisPage dummy
+        \App\Models\StatisPage::firstOrCreate(
+            ['slug' => 'visi-misi'],
+            ['judul' => 'Visi Misi Tes', 'konten' => json_encode([
                 ['title' => 'Visi', 'text' => 'Visi Tes'],
                 ['title' => 'Misi', 'text' => 'Misi Tes'],
-            ]),
-        ]);
+            ])]
+        );
 
-        // 5. Buat StatisPage dummy (Program Kerja)
-        StatisPage::create([
-            'judul' => 'Program Kerja Tes',
-            'slug' => 'program-kerja',
-            'konten' => '[]',
-        ]);
+        \App\Models\StatisPage::firstOrCreate(
+            ['slug' => 'program-kerja'],
+            ['judul' => 'Program Kerja Tes', 'konten' => '[]']
+        );
 
-        // 6. Buat TbMenuData dummy (Berita)
-        TbMenuData::create([
-            'menu_id' => 3, // misalnya 3 = menu Berita
-            'jenis_konten' => 'berita',
-            'title' => 'beritaa tai',
-            'content' => 'Konten berita dummy.',
-            'img' => 'dummy/news.png',
-        ]);
+        // 6️⃣ Tambahkan dummy menu (kalau belum ada)
+        $menuBerita = DB::table('tb_menu')->where('nama', 'Berita')->first();
+        if (!$menuBerita) {
+            DB::table('tb_menu')->insert([
+                'nama' => 'Berita',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $menuBerita = DB::table('tb_menu')->where('nama', 'Berita')->first();
+        }
 
-        // 7. Buat TbMenuData dummy (Galeri)
-        TbMenuData::create([
-            'menu_id' => 4, // misalnya 4 = menu Galeri
-            'jenis_konten' => 'galeri',
-            'content' => 'Konten galeri dummy.',
-            'img' => 'dummy/gallery.png',
-        ]);
+        $menuGaleri = DB::table('tb_menu')->where('nama', 'Galeri')->first();
+        if (!$menuGaleri) {
+            DB::table('tb_menu')->insert([
+                'nama' => 'Galeri',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $menuGaleri = DB::table('tb_menu')->where('nama', 'Galeri')->first();
+        }
+
+        // 7️⃣ Buat TbMenuData dummy (Berita)
+        \App\Models\TbMenuData::firstOrCreate(
+            ['menu_id' => $menuBerita->id, 'jenis_konten' => 'berita'],
+            [
+                'title' => 'Berita Dummy',
+                'content' => 'Konten berita dummy.',
+                'img' => 'dummy/news.png',
+            ]
+        );
+
+        // 8️⃣ Buat TbMenuData dummy (Galeri)
+        \App\Models\TbMenuData::firstOrCreate(
+            ['menu_id' => $menuGaleri->id, 'jenis_konten' => 'galeri'],
+            [
+                'title' => 'Galeri Dummy',
+                'content' => 'Konten galeri dummy.',
+                'img' => 'dummy/gallery.png',
+            ]
+        );
+
+        // 9️⃣ Aktifkan lagi foreign key check
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }
