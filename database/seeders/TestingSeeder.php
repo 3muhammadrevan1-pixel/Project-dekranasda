@@ -71,11 +71,8 @@ class TestingSeeder extends Seeder
             'konten' => '[]',
             // 'jenis' => 'halaman' // BARIS INI DIHAPUS SESUAI PERMINTAAN
         ]);
-
-        // 5. Buat TbMenuData (untuk galeri dan berita)
-        // PERBAIKAN: Mengganti 'judul' -> 'title', 'jenis' -> 'jenis_konten', 'konten' -> 'content'
-        
-       TbMenuData::create([
+TbMenuData::create([
+    'menu_id' => 3, // misalnya 3 = untuk menu Berita
     'title' => 'Berita Tes 1',
     'jenis_konten' => 'berita',
     'content' => 'Konten berita dummy.',
@@ -83,6 +80,7 @@ class TestingSeeder extends Seeder
 ]);
 
 TbMenuData::create([
+    'menu_id' => 4, // misalnya 4 = untuk menu Galeri
     'title' => 'Galeri Tes 1',
     'jenis_konten' => 'galeri',
     'content' => 'Konten galeri dummy.',
