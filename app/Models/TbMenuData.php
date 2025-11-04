@@ -13,6 +13,15 @@ class TbMenuData extends Model
 
     protected $table = 'tb_menu_data';
 
+    // WAJIB: Definisikan daftar jenis konten untuk validasi dan form admin
+    const JENIS_KONTEN = [
+        'berita'     => 'Berita/News',
+        'event'      => 'Acara/Event',
+        'galeri'     => 'Galeri Foto',
+        'organisasi' => 'Struktur Organisasi',
+        // Tambahkan jenis konten lain di sini jika ada!
+    ];
+
     protected $fillable = [
         'menu_id',
         'jenis_konten',
@@ -25,7 +34,7 @@ class TbMenuData extends Model
     ];
 
     protected $casts = [
-        'date' => 'datetime',
+        'date' => 'date',
     ];
     
     // Tambahkan accessor untuk data organisasi yang sudah didekode
@@ -53,7 +62,7 @@ class TbMenuData extends Model
             
             // Jika berhasil didekode dan hasilnya adalah array/objek, ambil elemen pertama
             if (is_array($data) && json_last_error() === JSON_ERROR_NONE) {
-                // Return elemen array pertama, atau array default jika kosong
+                // Mengembalikan elemen array pertama atau array default jika kosong
                 return $data[0] ?? ['jabatan' => null, 'deskripsi' => null];
             }
         }
