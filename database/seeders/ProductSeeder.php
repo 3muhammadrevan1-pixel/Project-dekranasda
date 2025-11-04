@@ -16,15 +16,11 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        $store1 = Store::firstOrCreate(
-            ['name' => 'Bogor Square'],
-            ['alamat' => 'Jl. Pajajaran No. 10, Bogor', 'telepon' => '6289602397994']
-        );
+        // PERBAIKAN: Mengambil Store yang sudah dibuat oleh StoreSeeder, BUKAN membuatnya lagi.
+        $store1 = Store::where('name', 'Bogor Square')->first();
+        $store2 = Store::where('name', 'Sengked Store')->first();
 
-        $store2 = Store::firstOrCreate(
-            ['name' => 'Sengked Store'],
-            ['alamat' => 'Jl. Suryakencana No. 5, Bogor', 'telepon' => '6285715727324']
-        );
+        // Peringatan: Pastikan StoreSeeder dipanggil sebelum ProductSeeder di DatabaseSeeder.php
 
         // ============================
         // PRODUK STORE 1
@@ -33,7 +29,7 @@ class ProductSeeder extends Seeder
             'name'      => 'Batik Khas Bogor',
             'category'  => 'Unggulan',
             'desc'      => 'Batik motif khas Bogor dengan corak tradisional.',
-            'store_id'  => $store1->id,
+            'store_id'  => $store1->id, // Menggunakan ID Toko yang sudah diambil
             'price'     => 250000,
             'type'      => 'baju',
             'img'       => '/storage/produk/pk8.jpg'
@@ -100,7 +96,7 @@ class ProductSeeder extends Seeder
             'img'       => '/storage/produk/sepatu rajut.jpg',
             'price'     => 300000,
             'desc'      => 'Sepatu kulit elegan dengan kualitas premium.',
-            'store_id'  => $store2->id,
+            'store_id'  => $store2->id, // Menggunakan ID Toko yang sudah diambil
             'type'      => 'sepatu'
         ]);
 

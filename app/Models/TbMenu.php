@@ -23,22 +23,58 @@ class TbMenu extends Model
         'parent_id', 
         'urutan', 
         'tipe', 
-        'status'
+        'status',
     ];
     
-    public function parent(): BelongsTo
+    
+    protected $casts = [
+        'parent_id' => 'integer',
+        'urutan' => 'integer',
+    ];
+
+    /**
+     * Scope: hanya ambil menu yang aktif.
+     */
+    public function scopeAktif($query)
     {
-        // Menu mencari parent-nya di tabel yang sama
-        return $this->belongsTo(TbMenu::class, 'parent_id', 'id');
+        return $query->where('status', 'aktif');
     }
 
     /**
-     * Relasi untuk mendapatkan semua sub-menu (Children) dari menu saat ini.
+     * Scope: urutkan menu berdasarkan kolom 'urutan'.
      */
-    public function children(): HasMany
+    public function scopeUrut($query)
     {
-        // Menu lain menunjuk ke ID ini sebagai parent_id
-        return $this->hasMany(TbMenu::class, 'parent_id', 'id')->orderBy('urutan');
+        return $query->orderBy('urutan', 'asc');
+    } 
+
+    /**
+     * Relasi ke konten (One to Many)
+     */
+    public function contents()
+    {
+        return $this->hasMany(TbMenuData::class, 'menu_id');
+    }
+
+ /**
+     * Relasi self (Parent)
+     */
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(self::class, 'parent_id')->orderBy('urutan', 'asc');
+    }
+
+    /**
+     * Optional: Ambil children secara rekursif (nested menu)
+     */
+    public function allChildren()
+    {
+        return $this->children()->with('allChildren');
     }
     /**
      * Relasi untuk mendapatkan SEMUA konten (berita, event, galeri, dll) 

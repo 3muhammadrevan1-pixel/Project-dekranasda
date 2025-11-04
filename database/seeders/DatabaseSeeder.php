@@ -14,27 +14,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
-
-         $this->call([
-            MenuSeeder::class, 
-            
+        $this->call([
             // Seeder yang bergantung pada MenuSeeder
+            TbMenuSeeder::class, 
             GallerySeeder::class,
             NewsSeeder::class,
             EventSeeder::class,
             OrganisasiSeeder::class,
         
-            
             // Seeder lain yang bersifat independen
-            ProductSeeder::class,
             StoreSeeder::class,
+            ProductSeeder::class,
             StatisPageSeeder::class,
+
+            // Ini yang berisi 2 akun spesifik Anda
+            UserSeeder::class,
             
         ]);
     }

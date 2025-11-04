@@ -492,11 +492,11 @@ header p {
     border-radius: 50%;
 }
 .scroll-btn.left {
-    left: -15px;
+    left: -15px;   
 }
 .scroll-btn.right {
     right: -15px;
-}
+}   
 .scroll-btn:hover {
     background: #d2b48c;
 }

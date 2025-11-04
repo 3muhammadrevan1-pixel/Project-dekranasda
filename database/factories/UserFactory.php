@@ -27,6 +27,10 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            // ⭐ PERBAIKAN: Tambahkan role dan status agar factory ini valid
+            // Kita set default ke operator/nonaktif, agar factory admin bisa dibuat spesifik
+            'role' => 'operator',
+            'status' => 'nonaktif',
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
@@ -39,6 +43,15 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    // ⭐ FUNGSI BARU: Buat state admin untuk kemudahan testing
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin',
+            'status' => 'aktif',
         ]);
     }
 }
