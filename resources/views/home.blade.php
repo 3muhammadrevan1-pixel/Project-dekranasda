@@ -18,8 +18,9 @@
             
             <!-- Foto -->
             <div class="col-lg-6 col-md-12 text-center text-lg-start">
+                <!-- Pastikan asset('assets/visi.png') berada di public/assets/visi.png -->
                 <img src="{{ asset('assets/visi.png') }}" alt="Dekranasda Kota Bogor" 
-                     class="img-fluid rounded-4 shadow-sm" style="max-width:100%;">
+                    class="img-fluid rounded-4 shadow-sm" style="max-width:100%;">
             </div>
             
             <!-- Teks + Card -->
@@ -113,22 +114,27 @@
             {{-- HANYA TAMPILKAN PRODUK DENGAN KATEGORI "Unggulan" --}}
             @if ($pr->category === "Unggulan")
                 @php
-                    $firstVariant = $pr->variants->first(); 
-                    // Prioritaskan: 1. Gambar Utama ($pr->img) -> 2. Gambar Varian Pertama -> 3. Default
-                    $productImg = $pr->img ?? optional($firstVariant)->img ?? 'assets/default.jpg'; 
-                    $productPrice = $pr->price ?? optional($firstVariant)->price ?? 0;
+                    $firstVariant = $pr->variants->first();
+
+                    // MENGAMBIL PATH MENTAH DARI DATABASE (e.g., 'products/image.jpg')
+                    $rawProductImgPath = $pr->img ?? optional($firstVariant)->img;
                     
-                    // 💡 PERBAIKAN 1: Logika untuk mendapatkan Ukuran yang Tersedia dari Varian Pertama
+                    // MEMBUAT FULL URL (e.g., 'http://app/storage/products/image.jpg')
+                    $productImgUrl = $rawProductImgPath ? asset('storage/' . $rawProductImgPath) : asset('assets/default.jpg');
+                    
+                    $productPrice = $pr->price ?? optional($firstVariant)->price ?? 0;
+
+                    // Ambil ukuran varian jika tersedia
                     $availableSizes = optional($firstVariant)->sizes ?? [];
                     $availableSizes = array_filter($availableSizes);
                 @endphp
 
                 <div class="product-card flex-shrink-0 me-3">
                     <div class="card h-100 text-center">
-                        <img src="{{ $productImg }}" class="card-img-top" alt="{{ $pr->name }}">
+                        <img src="{{ $productImgUrl }}" class="card-img-top" alt="{{ $pr->name }}">
                         <div class="card-body">
                             <h6 class="card-title">{{ $pr->name }}</h6>
-                            <p class="fw-bold harga-produk">Rp {{ number_format($productPrice,0,',','.') }}</p>
+                            <p class="fw-bold harga-produk">Rp {{ number_format($productPrice, 0, ',', '.') }}</p>
                             <button class="btn btn-custom w-100" data-bs-toggle="modal" data-bs-target="#productModal{{ $pr->id }}">
                                 Detail
                             </button>
@@ -136,21 +142,31 @@
                     </div>
                 </div>
 
+                <!-- Modal Produk -->
                 <div class="modal fade" id="productModal{{ $pr->id }}" tabindex="-1">
                     <div class="modal-dialog modal-xl modal-dialog-centered">
                         <div class="modal-content p-0 border-0 rounded-3 shadow-lg overflow-hidden position-relative">
                             <div class="row g-0">
+                                <!-- Gambar -->
                                 <div class="col-md-6 bg-light d-flex flex-column align-items-center justify-content-center p-4">
-                                    <img id="mainImg{{ $pr->id }}" src="{{ $productImg }}" alt="{{ $pr->name }}" class="img-fluid">
+                                    <!-- FIX: Menggunakan $rawProductImgPath untuk membuat URL yang benar -->
+                                    <img id="mainImg{{ $pr->id }}"
+                                         src="{{ $rawProductImgPath ? asset('storage/' . $rawProductImgPath) : asset('assets/default.jpg') }}"
+                                         alt="{{ $pr->name }}" 
+                                         class="img-fluid">
                                 </div>
 
+                                <!-- Detail -->
                                 <div class="col-md-6 p-4 d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <h4 class="modal-title">{{ $pr->name }}</h4>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
 
-                                    <h5 class="text-danger fw-bold mb-3" id="price{{ $pr->id }}">Rp {{ number_format($productPrice,0,',','.') }}</h5>
+                                    <h5 class="text-danger fw-bold mb-3" id="price{{ $pr->id }}">
+                                        Rp {{ number_format($productPrice, 0, ',', '.') }}
+                                    </h5>
+
                                     <p class="text-muted mb-3">{{ $pr->desc ?? 'Deskripsi tidak tersedia' }}</p>
 
                                     @if($pr->store)
@@ -166,20 +182,24 @@
                                             <label class="fw-semibold mb-2 d-block">Pilih Warna:</label>
                                             <div class="d-flex flex-wrap gap-2">
                                                 @foreach($pr->variants as $variant)
+                                                    @php
+                                                        // Menggunakan $variant->img untuk membuat URL variant yang benar
+                                                        $variantImg = $variant->img ? asset('storage/' . $variant->img) : $productImgUrl;
+                                                    @endphp
                                                     <button type="button"
-                                                            class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}" {{-- 💡 PERBAIKAN 2: Tambah class 'active' --}}
+                                                            class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}"
                                                             data-product="{{ $pr->id }}"
                                                             data-color="{{ $variant->color }}"
-                                                            data-img="{{ $variant->img ?? $productImg }}"
+                                                            data-img="{{ $variantImg }}"
                                                             data-price="{{ $variant->price ?? $productPrice }}">
-                                                        {{ ucfirst($variant->color) }}
-                                                    </button>
+                                                         {{ ucfirst($variant->color) }}
+                                                     </button>
                                                 @endforeach
                                             </div>
                                         </div>
 
                                         {{-- Pilih Ukuran --}}
-                                        @if(!empty($availableSizes)) {{-- 💡 PERBAIKAN 3: Tampilkan Ukuran hanya jika ada data --}}
+                                        @if(!empty($availableSizes))
                                             <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
                                                 <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
                                                 <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
@@ -187,38 +207,40 @@
                                                         <button type="button"
                                                                 class="btn btn-outline-secondary btn-sm size-option"
                                                                 onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
-                                                            {{ $s }}
-                                                        </button>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        @endif
-                                    @endif
+                                                             {{ $s }}
+                                                         </button>
+                                                     @endforeach
+                                                 </div>
+                                             </div>
+                                         @endif
+                                     @endif
 
-                                    {{-- Jumlah --}}
-                                    <div class="mb-3">
-                                        <label class="fw-semibold mb-2 d-block">Jumlah:</label>
-                                        <input type="number" class="form-control w-50" value="1" min="1" id="qty{{ $pr->id }}">
-                                    </div>
+                                     {{-- Jumlah --}}
+                                     <div class="mb-3">
+                                         <label class="fw-semibold mb-2 d-block">Jumlah:</label>
+                                         <input type="number" class="form-control w-50" value="1" min="1" id="qty{{ $pr->id }}">
+                                     </div>
 
-                                    {{-- WA --}}
-                                    <a href="#"
-                                        class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
-                                        data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
-                                        data-store-name="{{ $pr->store->name ?? '' }}"
-                                        data-store-address="{{ $pr->store->alamat ?? '' }}"
-                                        onclick="sendWA({{ $pr->id }})">
-                                        <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
-        @endforeach
-    </div>
+                                     {{-- WhatsApp --}}
+                                     <a href="#"
+                                         class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
+                                         data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
+                                         data-store-name="{{ $pr->store->name ?? '' }}"
+                                         data-store-address="{{ $pr->store->alamat ?? '' }}"
+                                         onclick="sendWA({{ $pr->id }})">
+                                         <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
+                                     </a>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+                 <!-- END Modal -->
+             @endif
+         @endforeach
+     </div>
 </section>
+
 
 <!-- Berita Compact Responsive Swipe -->
 <section id="berita" class="container py-5">
@@ -228,7 +250,7 @@
         @foreach ($news as $n)
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm border-0">
-                    {{-- Mengakses kolom 'img' --}}
+                    {{-- Mengakses kolom 'img' DENGAN ASSET STORAGE YANG BENAR --}}
                     <img src="{{ asset('storage/'.$n->img) }}" class="card-img-top" alt="{{ $n->title }}">
                     <div class="card-body d-flex flex-column">
                         {{-- Mengakses kolom 'title' --}}
@@ -255,7 +277,8 @@
 
 
 
-<!-- Galeri --><section id="galeri" class="container py-5">
+<!-- Galeri -->
+<section id="galeri" class="container py-5">
     <h2 class="section-title">Galeri</h2>
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
         {{-- Loop menggunakan variabel $galeri --}}
@@ -319,9 +342,6 @@ function formatRupiah(angka){
 
 // Fungsi dummy untuk updateWA, disesuaikan dengan sendWA
 function updateWa(productId) {
-    // Tidak perlu melakukan apa-apa di sini, cukup pastikan fungsi ini ada
-    // Pilihan warna/ukuran sudah tercatat di DOM dengan class 'active'
-    // Fungsi sendWA akan membaca status 'active' tersebut.
 }
 
 // === PILIH SIZE ===
@@ -372,6 +392,7 @@ document.addEventListener('click', function(e){
         const color = e.target.dataset.color;
         const product = allProducts.find(p=>p.id==productId);
         if(!product) return;
+        // Cari variant yang sesuai
         const variant = product.variants.find(v=>v.color===color);
         // Variant mungkin null jika data variant tidak lengkap, jadi dicek dulu
         if(!variant) {
@@ -388,7 +409,8 @@ document.addEventListener('click', function(e){
 
         // Update harga
         const priceEl = document.getElementById('price'+productId);
-        if(priceEl) priceEl.innerText = formatRupiah(variant.price ?? 0);
+        // Pastikan price tidak null/undefined sebelum di format
+        if(priceEl) priceEl.innerText = formatRupiah(variant.price ?? product.price ?? 0); 
 
         // Update active button warna
         document.querySelectorAll(`#productModal${productId} .color-btn`).forEach(b=>b.classList.remove('active'));
@@ -399,7 +421,7 @@ document.addEventListener('click', function(e){
         const sizesContainer = document.getElementById('sizes'+productId);
         
         // Cek data sizes dari JSON yang sudah diexplode di Controller (array JS)
-        if(variant.sizes && variant.sizes.length > 0){
+        if(variant.sizes && variant.sizes.length > 0 && variant.sizes[0] !== ""){
             if(sizeWrapper) sizeWrapper.style.display='block';
             if(sizesContainer){
                 sizesContainer.innerHTML='';

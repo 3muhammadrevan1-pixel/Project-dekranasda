@@ -993,5 +993,40 @@
     .badge-secondary {
         background-color: #6c757d; /* Abu-abu */
     }
+    .alert {
+    padding: 1rem 1.5rem;
+    margin-bottom: 25px;
+    border: none;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    font-size: 1rem;
+    display: flex;
+    align-items: flex-start; /* Ubah ke flex-start agar list di alert danger rata atas */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-out;
+}
 
-    
+.alert-icon {
+    font-size: 1.5rem;
+    margin-right: 15px;
+    flex-shrink: 0; 
+    margin-top: 2px; /* Penyesuaian vertikal */
+}
+
+/* Warna Hijau untuk Sukses */
+.alert-success {
+    color: #0c6e1d;
+    background-color: #d8f5dc;
+}
+.alert-success .alert-icon {
+    color: #28a745;
+}
+
+/* Warna Merah untuk Gagal/Error */
+.alert-danger {
+    color: #721c24;
+    background-color: #fcebeb;
+}
+.alert-danger .alert-icon {
+    color: #dc3545;
+}

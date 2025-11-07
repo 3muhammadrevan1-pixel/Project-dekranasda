@@ -30,7 +30,10 @@ class MenuDataController extends Controller
         }
 
         // Ambil data yang sudah difilter, diurutkan berdasarkan ID terlama (ASC)
-        $menu_data = $query->orderBy('id', 'asc')->get();
+       $menu_data = $query
+            ->orderBy('id', 'asc')
+            ->paginate(10) // Menerapkan pagination: 10 data per halaman
+            ->appends($request->query()); // Mempertahankan parameter filter saat navigasi
 
         // Kirim ke view, termasuk daftar menu untuk filter dan ID menu yang dipilih
         return view('admin.menu_data.index', compact('menu_data', 'menus', 'selectedMenuId'));

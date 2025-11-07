@@ -4,12 +4,8 @@
 
 @section('content')
 
-{{-- Catatan: Semua styling (termasuk .badge, .btn-add, .table, dan layout)
-sekarang diasumsikan berasal dari file CSS global Anda,
-sesuai permintaan. Blok <style> dihilangkan. --}}
-
 <div class="content">
-{{-- Header dan Tombol Aksi (Menggunakan class header-actions dan btn-add dari CSS Global) --}}
+{{-- Header dan Tombol Aksi --}}
 <div class="header-actions">
 <h2>Daftar Menu Utama</h2>
 <a href="{{ route('admin.menu.create') }}" class="btn btn-add">
@@ -17,12 +13,37 @@ sesuai permintaan. Blok <style> dihilangkan. --}}
 </a>
 </div>
 
-{{-- Notifikasi Sukses --}}
+{{-- 3. PERBAIKAN STRUKTUR NOTIFIKASI AGAR IKON MUNCUL --}}
 @if (session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle alert-icon"></i> 
+        <span>{{ session('success') }}</span>
+    </div>
 @endif
 
-{{-- Menggunakan class .table dari CSS Global --}}
+@if (session('error'))
+    <div class="alert alert-danger">
+        <i class="fas fa-times-circle alert-icon"></i>
+        <span>{{ session('error') }}</span>
+    </div>
+@endif
+
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle alert-icon"></i>
+        <div>
+            <span class="d-block mb-1">Terjadi kesalahan validasi:</span>
+            {{-- Mengganti <ul> dengan style inline agar terintegrasi dengan baik --}}
+            <ul class="mb-0" style="list-style: disc; padding-left: 20px;">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+@endif
+
+{{-- Menggunakan class .table --}}
 <div class="table-wrapper">
     <table class="table">
         <thead>
@@ -33,7 +54,7 @@ sesuai permintaan. Blok <style> dihilangkan. --}}
                 <th class="text-center">Tipe</th>
                 <th class="text-center">Status</th>
                 <th style="width:100px; text-align:center;">Urutan</th>
-                <th style="width:100px; text-align:center;">Aksi</th> {{-- Lebar kolom Aksi disesuaikan --}}
+                <th style="width:100px; text-align:center;">Aksi</th>
             </tr>
         </thead>
         <tbody>
@@ -44,10 +65,6 @@ sesuai permintaan. Blok <style> dihilangkan. --}}
                     <td>{{ $menu->nama }}</td>
                     <td>{{ $menu->parent ? $menu->parent->nama : '— (Utama)' }}</td>
                     
-                    {{-- Logika Warna untuk TIPE:
-                        - Dinamis (Biru) -> badge-primary
-                        - Statis (Neutral/Abu-abu) -> badge-secondary 
-                    --}}
                     <td class="text-center">
                         @php
                             $tipeValue = strtolower($menu->tipe ?? 'kosong');
@@ -62,10 +79,6 @@ sesuai permintaan. Blok <style> dihilangkan. --}}
                         </span>
                     </td>
                     
-                    {{-- Logika Warna untuk STATUS:
-                        - Aktif (Hijau) -> badge-success
-                        - Tidak Aktif (Merah) -> badge-danger
-                    --}}
                     <td class="text-center">
                         @php
                             $statusValue = strtolower($menu->status ?? 'kosong');
@@ -81,9 +94,8 @@ sesuai permintaan. Blok <style> dihilangkan. --}}
                     </td>
                     
                     <td class="text-center">{{ $menu->urutan ?? '-' }}</td>
-                    {{-- Menggunakan class .actions, .btn-edit, .btn-delete dari CSS Global --}}
+                    
                     <td class="actions">
-                        {{-- Tombol Lihat Detail/View dihilangkan --}}
                         
                         <a href="{{ route('admin.menu.edit', $menu->id) }}" class="btn btn-edit" title="Edit Menu"><i class="fas fa-edit"></i></a>
                         
@@ -102,7 +114,25 @@ sesuai permintaan. Blok <style> dihilangkan. --}}
         </tbody>
     </table>
 </div>
+{{-- BLOK BARU: Pagination dan Informasi Ringkasan --}}
+    @if ($menus instanceof \Illuminate\Pagination\LengthAwarePaginator && $menus->total() > 0)
+        <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
+            {{-- Informasi Halaman --}}
+            <div class="pagination-info" style="font-size: 0.9rem; color: #6b7280; padding: 0.5rem 0;">
+                Menampilkan 
+                <span style="font-weight: 600;">{{ $menus->firstItem() }}</span>
+                sampai
+                <span style="font-weight: 600;">{{ $menus->lastItem() }}</span>
+                dari total 
+                <span style="font-weight: 600;">{{ $menus->total() }}</span> menu.
+            </div>
 
+            {{-- Tautan Pagination menggunakan view kustom di page/pagenation.blade.php --}}
+            <div class="pagination-links-wrapper">
+                {{ $menus->onEachSide(1)->links('page.pagenation') }}
+            </div>
+        </div>
+    @endif
 
 </div>
 

@@ -14,27 +14,25 @@ class MenuController extends Controller
      */
     public function index()
     {
-        // Tampilkan menu beserta parent-nya, urut berdasarkan parent dan urutan
+        // Tampilkan menu beserta parent-nya, urut berdasarkan ID terlama (ASC).
+        // Ini memastikan data yang paling lama dibuat muncul di atas.
         $menus = TbMenu::with('parent')
-            ->orderBy('parent_id')
-            ->orderBy('urutan')
-            ->get();
+            ->orderBy('id', 'asc') // DISESUAIKAN: Mengurutkan berdasarkan ID terlama
+            ->paginate(5); 
 
         return view('admin.menu.index', compact('menus'));
     }
-
     /**
      * Form tambah menu.
      */
     public function create()
     {
-        // FIX: Mengambil SEMUA menu (bukan hanya parent) karena view ini (admin.menu.create)
-        // sepertinya digunakan untuk membuat KONTEN baru yang perlu diikatkan ke menu (utama atau sub).
-        // Selain itu, nama variabel diubah menjadi $menus agar sesuai dengan yang digunakan di view.
-        $menus = TbMenu::orderBy('urutan')->get();
+        // Mengambil SEMUA menu top-level (parent_id = 0) untuk dijadikan opsi menu induk.
+        $parentMenus = TbMenu::where('parent_id', 0)
+            ->orderBy('urutan')
+            ->get();
 
-        // Mengirimkan $menus ke view
-        return view('admin.menu.create', compact('menus'));
+        return view('admin.menu.create', compact('parentMenus'));
     }
 
     /**
