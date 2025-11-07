@@ -4,282 +4,267 @@
 
 @section('content')
 <div class="container py-5">
-  <h2 class="section-title">Semua Produk</h2>
+    <h2 class="section-title">Semua Produk</h2>
 
-  <!-- Filter -->
-  <div class="mb-4 text-center">
-    <button class="btn btn-custom me-2 mb-2 filter-btn active" data-category="all">Semua</button>
-    @foreach($categories as $cat)
-      <button class="btn btn-custom me-2 mb-2 filter-btn" data-category="{{ $cat }}">
-        {{ $cat }}
-      </button>
-    @endforeach
-  </div>
-
-  <!-- Grid Produk -->
-  <div class="d-flex flex-wrap gap-3 justify-content-center" id="productGrid">
-    @foreach($allProducts as $pr)
-     <div class="product-card" data-category="{{ strtolower($pr->category) }}">
-        <div class="card h-100 text-center">
-          <img src="{{ $pr->img ?? optional($pr->variants->first())->img }}" 
-               class="card-img-top" 
-               alt="{{ $pr->name }}">
-          <div class="card-body">
-            <h6 class="card-title">{{ $pr->name }}</h6>
-            <p class="fw-bold harga-produk">
-              Rp {{ number_format($pr->price ?? optional($pr->variants->first())->price, 0, ',', '.') }}
-            </p>
-            <button class="btn btn-custom w-100" data-bs-toggle="modal" data-bs-target="#productModal{{ $pr->id }}">
-              Detail
+    <!-- Filter -->
+    <div class="mb-4 text-center">
+        <button class="btn btn-custom me-2 mb-2 filter-btn active" data-category="all">Semua</button>
+        @foreach($categories as $cat)
+            <button class="btn btn-custom me-2 mb-2 filter-btn" data-category="{{ $cat }}">
+                {{ $cat }}
             </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal produk -->
-      <div class="modal fade" id="productModal{{ $pr->id }}" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-          <div class="modal-content p-0">
-            <div class="row g-0">
-              <!-- Gambar -->
-              <div class="col-md-6 bg-light d-flex align-items-center justify-content-center p-4">
-                <img id="mainImg{{ $pr->id }}" 
-                     src="{{ $pr->img ?? optional($pr->variants->first())->img }}" 
-                     class="img-fluid rounded shadow-sm" 
-                     alt="{{ $pr->name }}">
-              </div>
-
-              <!-- Detail -->
-              <div class="col-md-6 p-4 d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                  <h4 class="modal-title">{{ $pr->name }}</h4>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <h5 class="text-danger fw-bold mb-3" id="price{{ $pr->id }}">
-                  Rp {{ number_format($pr->price ?? optional($pr->variants->first())->price, 0, ',', '.') }}
-                </h5>
-                <p class="text-muted mb-3">{{ $pr->desc }}</p>
-
-                {{-- Info Toko --}}
-                @if($pr->store)
-                  <div class="mb-3 p-2 bg-light rounded">
-                    <p class="mb-1"><strong>Toko:</strong> {{ $pr->store->name }}</p>
-                    <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ $pr->store->alamat }}</p>
-                  </div>
-                @endif
-
-                {{-- Warna --}}
-                @if($pr->variants->count())
-                  <label class="fw-semibold mb-1">Pilih Warna:</label>
-                  <div class="mb-3 d-flex flex-wrap gap-2">
-                    @foreach($pr->variants as $variant)
-                      <button class="btn btn-outline-dark btn-sm color-btn"
-                              data-product="{{ $pr->id }}"
-                              data-color="{{ $variant->color }}"
-                              data-img="{{ $variant->img }}"
-                              data-price="{{ $variant->price }}">
-                        {{ $variant->color }}
-                      </button>
-                    @endforeach
-                  </div>
-                @endif
-
-              
-             
-          {{-- Ukuran --}}
-          {{-- // Ambil tipe dari produk. Jika null, anggap 'none' untuk amannya. --}}
-@php
- $firstVariant = $pr->variants->first();
-
- $productType = strtolower($pr->type ?? 'none'); 
-@endphp
-
-{{-- Tampilkan Ukuran HANYA JIKA type BUKAN 'none' DAN ukuran tersedia di varian pertama --}}
-@if($productType != 'none' && $firstVariant && is_array($firstVariant->sizes) && count($firstVariant->sizes))
-
-    <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
-        <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
-        <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
-            @foreach($firstVariant->sizes as $s)
-                <button type="button"
-                        class="btn btn-outline-secondary btn-sm size-option"
-                        onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
-                    {{ $s }}
-                </button>
-            @endforeach
-        </div>
+        @endforeach
     </div>
-@endif
 
-                {{-- Qty --}}
-                <label class="fw-semibold mb-1">Jumlah:</label>
-                <input type="number" class="form-control mb-3 w-50" value="1" min="1" id="qty{{ $pr->id }}">
+    <!-- Grid Produk -->
+    <div class="d-flex flex-wrap gap-3 justify-content-center" id="productGrid">
+        @foreach($allProducts as $pr)
+            <div class="product-card" data-category="{{ strtolower($pr->category) }}">
+                <div class="card h-100 text-center">
+                    <!-- Gambar Produk Utama -->
+                    <img src="{{ asset('storage/' . ($pr->img ?? optional($pr->variants->first())->img)) }}" 
+                         class="card-img-top" 
+                         alt="{{ $pr->name }}">
 
-                {{-- WhatsApp --}}
-                <a href="#"
-                  class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
-                  data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
-                  data-store-name="{{ $pr->store->name ?? '' }}"
-                  data-store-address="{{ $pr->store->alamat ?? '' }}"
-                  data-product-id="{{ $pr->id }}"
-                  onclick="sendWA({{ $pr->id }})">
-                  <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
-                </a>
-              </div>
-            </div>
-
-            <!-- Produk lain -->
-            <div class="p-4 border-top">
-              <h6 class="related-title mb-3">Produk Lainnya</h6>
-              <div class="related-wrapper">
-                @foreach($allProducts as $other)
-                  @if($other->id != $pr->id)
-                    <div class="related-card card text-center shadow-sm">
-                      <img src="{{ $other->img ?? optional($other->variants->first())->img }}" 
-                           alt="{{ $other->name }}">
-                      <div class="card-body p-2">
-                        <p class="small fw-semibold mb-1">{{ $other->name }}</p>
-                        <p class="harga-produk small mb-2">
-                          Rp {{ number_format($other->price ?? optional($other->variants->first())->price, 0, ',', '.') }}
+                    <div class="card-body">
+                        <h6 class="card-title">{{ $pr->name }}</h6>
+                        <p class="fw-bold harga-produk">
+                            Rp {{ number_format($pr->price ?? optional($pr->variants->first())->price, 0, ',', '.') }}
                         </p>
-                        <button class="btn btn-sm btn-custom w-100"
-                          onclick="switchModal({{ $pr->id }}, {{ $other->id }})">
-                          Lihat
+                        <button class="btn btn-custom w-100" data-bs-toggle="modal" data-bs-target="#productModal{{ $pr->id }}">
+                            Detail
                         </button>
-                      </div>
                     </div>
-                  @endif
-                @endforeach
-              </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <!-- END Modal -->
-    @endforeach
-  </div>
+
+            <!-- Modal Produk -->
+            <div class="modal fade" id="productModal{{ $pr->id }}" tabindex="-1">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content p-0">
+                        <div class="row g-0">
+                            <!-- Gambar -->
+                            <div class="col-md-6 bg-light d-flex align-items-center justify-content-center p-4">
+                                <img id="mainImg{{ $pr->id }}" 
+                                     src="{{ asset('storage/' . ($pr->img ?? optional($pr->variants->first())->img)) }}" 
+                                     class="img-fluid rounded shadow-sm" 
+                                     alt="{{ $pr->name }}">
+                            </div>
+
+                            <!-- Detail Produk -->
+                            <div class="col-md-6 p-4 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h4 class="modal-title">{{ $pr->name }}</h4>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <h5 class="text-danger fw-bold mb-3" id="price{{ $pr->id }}">
+                                    Rp {{ number_format($pr->price ?? optional($pr->variants->first())->price, 0, ',', '.') }}
+                                </h5>
+
+                                <p class="text-muted mb-3">{{ $pr->desc }}</p>
+
+                                <!-- Info Toko -->
+                                @if($pr->store)
+                                    <div class="mb-3 p-2 bg-light rounded">
+                                        <p class="mb-1"><strong>Toko:</strong> {{ $pr->store->name }}</p>
+                                        <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ $pr->store->alamat }}</p>
+                                    </div>
+                                @endif
+
+                                <!-- Warna (Variants) -->
+                                @if($pr->variants->count())
+                                    <label class="fw-semibold mb-1">Pilih Warna:</label>
+                                    <div class="mb-3 d-flex flex-wrap gap-2">
+                                        @foreach($pr->variants as $variant)
+                                            <button class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}"
+                                                    data-product="{{ $pr->id }}"
+                                                    data-color="{{ $variant->color }}"
+                                                    data-img="{{ asset('storage/' . $variant->img) }}"
+                                                    data-price="{{ $variant->price }}">
+                                                {{ $variant->color }}
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                <!-- Ukuran (Size) -->
+                                @php
+                                    $firstVariant = $pr->variants->first();
+                                    $productType = strtolower($pr->type ?? 'none'); 
+                                @endphp
+
+                                @if($productType != 'none' && $firstVariant && is_array($firstVariant->sizes) && count($firstVariant->sizes))
+                                    <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
+                                        <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
+                                        <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
+                                            @foreach($firstVariant->sizes as $s)
+                                                <button type="button"
+                                                        class="btn btn-outline-secondary btn-sm size-option {{ $loop->first ? 'active' : '' }}"
+                                                        onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
+                                                    {{ $s }}
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Jumlah -->
+                                <label class="fw-semibold mb-1">Jumlah:</label>
+                                <input type="number" class="form-control mb-3 w-50" value="1" min="1" id="qty{{ $pr->id }}">
+
+                                <!-- Tombol WhatsApp -->
+                                <a href="#"
+                                   class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
+                                   data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
+                                   data-store-name="{{ $pr->store->name ?? '' }}"
+                                   data-store-address="{{ $pr->store->alamat ?? '' }}"
+                                   data-product-id="{{ $pr->id }}"
+                                   onclick="sendWA({{ $pr->id }})">
+                                    <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Produk Lainnya -->
+                        <div class="p-4 border-top">
+                            <h6 class="related-title mb-3">Produk Lainnya</h6>
+                            <div class="related-wrapper">
+                                @foreach($allProducts as $other)
+                                    @if($other->id != $pr->id)
+                                        <div class="related-card card text-center shadow-sm">
+                                            <img src="{{ asset('storage/' . ($other->img ?? optional($other->variants->first())->img)) }}" 
+                                                 alt="{{ $other->name }}">
+                                            <div class="card-body p-2">
+                                                <p class="small fw-semibold mb-1">{{ $other->name }}</p>
+                                                <p class="harga-produk small mb-2">
+                                                    Rp {{ number_format($other->price ?? optional($other->variants->first())->price, 0, ',', '.') }}
+                                                </p>
+                                                <button class="btn btn-sm btn-custom w-100"
+                                                        onclick="switchModal({{ $pr->id }}, {{ $other->id }})">
+                                                    Lihat
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- END Modal -->
+        @endforeach
+    </div>
 </div>
 @endsection
 
 @section('scripts')
 <script>
-const allProducts = @json($allProductsJs);
+    const allProducts = @json($allProductsJs);
 
-// === FILTER PRODUK ===
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    // === FILTER PRODUK ===
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
 
-    const category = btn.dataset.category.toLowerCase();
-    document.querySelectorAll('.product-card').forEach(card => {
-      card.style.display = (category === 'all' || card.dataset.category.toLowerCase() === category) 
-        ? 'flex' 
-        : 'none';
-    });
-  });
-});
-
-// === FORMAT RUPIAH ===
-function formatRupiah(angka) {
-  return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-}
-
-// === GANTI VARIANT ===
-document.querySelectorAll('.color-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const id = this.dataset.product;
-    const color = this.dataset.color;
-    const img = this.dataset.img;
-    const price = this.dataset.price;
-
-    // Update gambar & harga
-    document.getElementById("mainImg"+id).src = img;
-    document.getElementById("price"+id).innerText = formatRupiah(price);
-
-    // Active button warna
-    document.querySelectorAll(`#productModal${id} .color-btn`).forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-
-    // Update ukuran sesuai variant
-   const product = allProducts.find(p => p.id == id);
-        const variant = product.variants.find(v => v.color === color);
-        const sizesDiv = document.getElementById("sizes"+id);
-        sizesDiv.innerHTML = '';
-
-    if (variant.sizes && variant.sizes.length > 0) {
-            variant.sizes.forEach(s => {
-                // BARIS BARU: Langsung ambil s (karena s sudah string ukuran)
-                const sizeVal = s; 
-                
-                // BARIS LAMA DIHAPUS: const sizeVal = typeof s === 'string' ? s : s.size;
-                
-                const btn = document.createElement("button");
-                btn.className = "btn btn-outline-secondary btn-sm size-option";
-                btn.innerText = sizeVal;
-                btn.onclick = () => selectSize(id, sizeVal);
-                sizesDiv.appendChild(btn);
+            const category = btn.dataset.category.toLowerCase();
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.style.display = (category === 'all' || card.dataset.category.toLowerCase() === category)
+                    ? 'flex'
+                    : 'none';
             });
-        } else {
-          const btn = document.createElement("button");
-          btn.className = "btn btn-outline-secondary btn-sm";
-          btn.innerText = "Tidak tersedia";
-          btn.disabled = true;
-          sizesDiv.appendChild(btn);
-        }
+        });
+    });
 
-    updateWa(id);
-  });
-});
+    // === FORMAT RUPIAH ===
+    function formatRupiah(angka) {
+        return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
 
-// === PILIH SIZE ===
-function selectSize(id, size) {
-  const sizesDiv = document.getElementById('sizes' + id);
-  sizesDiv.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));
-  const btn = Array.from(sizesDiv.querySelectorAll('.size-option')).find(b => b.innerText === size);
-  if (btn) btn.classList.add('active');
-  updateWa(id);
-}
+    // === GANTI VARIANT (WARNA) ===
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const id = this.dataset.product;
+            const color = this.dataset.color;
+            const img = this.dataset.img;
+            const price = this.dataset.price;
 
-// === SWITCH MODAL ===
-function switchModal(currentId, targetId) {
-  const current = document.getElementById('productModal' + currentId);
-  const target = document.getElementById('productModal' + targetId);
+            // Update gambar & harga
+            document.getElementById(`mainImg${id}`).src = img;
+            document.getElementById(`price${id}`).innerText = formatRupiah(price);
 
-  bootstrap.Modal.getInstance(current).hide();
-  new bootstrap.Modal(target).show();
-}
-// === UPDATE WA ===
-function sendWA(productId){
-  const pr = allProducts.find(p => p.id == productId);
-  if(!pr) return;
+            // Aktifkan warna terpilih
+            document.querySelectorAll(`#productModal${id} .color-btn`).forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
 
-  const qty = document.getElementById('qty'+productId).value || 1;
-  
-  // Ambil nilai Warna dan Ukuran
-  // Nilai akan berupa string kosong ('') jika tidak ada yang dipilih.
-  const selectedColor = document.querySelector('#productModal'+productId+' .color-btn.active')?.innerText || '';
-  const selectedSize = document.querySelector('#sizes'+productId+' .size-option.active')?.innerText || '';
+            // Update ukuran berdasarkan varian
+            const product = allProducts.find(p => p.id == id);
+            const variant = product.variants.find(v => v.color === color);
+            const sizesDiv = document.getElementById(`sizes${id}`);
+            sizesDiv.innerHTML = '';
 
-  const waBtn = document.querySelector('#productModal'+productId+' .btn-wa');
-  const waNumber = waBtn.dataset.wa;
-  const storeName = waBtn.dataset.storeName || (pr.store?.name || '');
-  const storeAddress = waBtn.dataset.storeAddress || (pr.store?.alamat || '');
+            if (variant.sizes && variant.sizes.length > 0) {
+                variant.sizes.forEach(s => {
+                    const btn = document.createElement("button");
+                    btn.className = "btn btn-outline-secondary btn-sm size-option";
+                    btn.innerText = s;
+                    btn.setAttribute('onclick', `selectSize(${id}, '${s}')`);
+                    sizesDiv.appendChild(btn);
+                });
+            } else {
+                const btn = document.createElement("button");
+                btn.className = "btn btn-outline-secondary btn-sm";
+                btn.innerText = "Tidak tersedia";
+                btn.disabled = true;
+                sizesDiv.appendChild(btn);
+            }
+        });
+    });
 
-  // Logika untuk membangun bagian Warna dan Ukuran secara kondisional.
-  // Jika nilainya ada, tambahkan baris dan newline (\n). Jika tidak ada, hasilnya string kosong.
-  let colorLine = selectedColor ? `Warna: ${selectedColor}\n` : '';
-  let sizeLine = selectedSize ? `Ukuran: ${selectedSize}\n` : '';
+    // === PILIH SIZE ===
+    function selectSize(id, size) {
+        const sizesDiv = document.getElementById('sizes' + id);
+        sizesDiv.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));
+        const btn = Array.from(sizesDiv.querySelectorAll('.size-option')).find(b => b.innerText === size);
+        if (btn) btn.classList.add('active');
+    }
 
-  const message = `Halo Admin, saya ingin memesan:
+    // === GANTI MODAL PRODUK ===
+    function switchModal(currentId, targetId) {
+        const current = document.getElementById(`productModal${currentId}`);
+        const target = document.getElementById(`productModal${targetId}`);
+
+        bootstrap.Modal.getInstance(current).hide();
+        new bootstrap.Modal(target).show();
+    }
+
+    // === KIRIM PESAN WHATSAPP ===
+    function sendWA(productId) {
+        const pr = allProducts.find(p => p.id == productId);
+        if (!pr) return;
+
+        const qty = document.getElementById(`qty${productId}`).value || 1;
+        const selectedColor = document.querySelector(`#productModal${productId} .color-btn.active`)?.innerText || '';
+        const selectedSize = document.querySelector(`#sizes${productId} .size-option.active`)?.innerText || '';
+
+        const waBtn = document.querySelector(`#productModal${productId} .btn-wa`);
+        const waNumber = waBtn.dataset.wa;
+        const storeName = waBtn.dataset.storeName || (pr.store?.name || '');
+        const storeAddress = waBtn.dataset.storeAddress || (pr.store?.alamat || '');
+
+        let colorLine = selectedColor ? `Warna: ${selectedColor}\n` : '';
+        let sizeLine = selectedSize ? `Ukuran: ${selectedSize}\n` : '';
+
+        const message = `Halo Admin, saya ingin memesan:
 Produk: ${pr.name}
 Toko: ${storeName}
 Alamat: ${storeAddress}
 ${colorLine}${sizeLine}Jumlah: ${qty}`;
 
-  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
-  window.open(waUrl,'_blank');
-}
+        const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, '_blank');
+    }
 </script>
 @endsection

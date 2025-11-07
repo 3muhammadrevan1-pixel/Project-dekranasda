@@ -1,120 +1,166 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Edit Konten Menu')
+@section('title', 'Edit Menu')
 
 @section('content')
 <div class="content">
     <div class="header-actions">
-        <h2>Edit Konten: {{ $menu_data->title }}</h2>
+        <h2>Edit Menu: {{ $menu->nama }}</h2>
     </div>
 
+    {{-- Notifikasi Error --}}
     @if ($errors->any())
         <div class="alert alert-danger">
-            *Gagal menyimpan data!* Mohon periksa kembali kolom isian di bawah.
+            <strong>Gagal menyimpan data!</strong> Mohon periksa kembali kolom isian di bawah.
         </div>
     @endif
 
     <div class="form-card">
-        <form action="{{ route('admin.menu_data.update', $menu_data->id) }}" method="POST" class="form" enctype="multipart/form-data">
-            @csrf 
-            @method('PUT') 
+        {{-- Form mengarah ke MenuController@update --}}
+        <form action="{{ route('admin.menu.update', $menu->id) }}" method="POST" class="form">
+            @csrf
+            @method('PUT') {{-- Wajib untuk metode UPDATE --}}
 
-            {{-- Pilihan Menu ID --}}
+            {{-- Nama Menu --}}
             <div class="form-group">
-                <label for="menu_id">Menu Terkait</label>
-                <select id="menu_id" name="menu_id" class="form-control @error('menu_id') is-invalid @enderror" required>
-                    <option value="">-- Pilih Menu Utama/Sub Menu --</option>
-                    @foreach ($menus as $menu)
-                        <option value="{{ $menu->id }}" {{ old('menu_id', $menu_data->menu_id) == $menu->id ? 'selected' : '' }}>
-                            {{ $menu->nama }} (Tipe: {{ $menu->tipe }})
-                        </option>
+                <label for="nama">Nama Menu</label>
+                <input 
+                    type="text" 
+                    id="nama" 
+                    name="nama" 
+                    class="form-control @error('nama') is-invalid @enderror" 
+                    value="{{ old('nama', $menu->nama) }}" 
+                    placeholder="Contoh: Tentang Kami / Berita" 
+                    required
+                >
+                @error('nama')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            {{-- Menu Induk --}}
+            <div class="form-group">
+                <label for="parent_id">Menu Induk (Parent)</label>
+                <select 
+                    id="parent_id" 
+                    name="parent_id" 
+                    class="form-control @error('parent_id') is-invalid @enderror"
+                >
+                    <option value="0" {{ old('parent_id', $menu->parent_id ?? 0) == 0 ? 'selected' : '' }}>
+                        — Menu Utama (Top Level) —
+                    </option>
+
+                    {{-- Loop menu parent --}}
+                    @foreach ($parentMenus as $parent)
+                        @if ($parent->id != $menu->id)
+                            <option 
+                                value="{{ $parent->id }}" 
+                                {{ old('parent_id', $menu->parent_id ?? 0) == $parent->id ? 'selected' : '' }}
+                            >
+                                {{ $parent->nama }}
+                            </option>
+                        @endif
                     @endforeach
                 </select>
-                @error('menu_id')
+                @error('parent_id')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            {{-- Judul (HAPUS 'required') --}}
+            {{-- Urutan --}}
             <div class="form-group">
-                <label for="title">Judul Konten (Opsional)</label>
-                {{-- *Hapus 'required' dari sini* --}}
-                <input type="text" id="title" name="title" class="form-control @error('title') is-invalid @enderror" 
-                        value="{{ old('title', $menu_data->title) }}">
-                @error('title')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-            
-            {{-- Isi Konten (LongText) (Pastikan tidak ada 'required') --}}
-            <div class="form-group">
-                <label for="content">Isi Konten (Opsional)</label>
-                <textarea id="content" name="content" class="form-control @error('content') is-invalid @enderror" rows="5">{{ old('content', $menu_data->content) }}</textarea>
-                @error('content')
+                <label for="urutan">Urutan Tampil (Opsional)</label>
+                <input 
+                    type="number" 
+                    id="urutan" 
+                    name="urutan" 
+                    class="form-control @error('urutan') is-invalid @enderror" 
+                    placeholder="Contoh: 1"
+                    value="{{ old('urutan', $menu->urutan) }}"
+                >
+                @error('urutan')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            {{-- Jenis Konten --}}
+            {{-- Tipe Menu --}}
             <div class="form-group">
-                <label for="jenis_konten">Jenis Konten (Opsional)</label>
-                <input type="text" id="jenis_konten" name="jenis_konten" class="form-control @error('jenis_konten') is-invalid @enderror" 
-                        value="{{ old('jenis_konten', $menu_data->jenis_konten) }}">
-                @error('jenis_konten')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-            
-            {{-- Tanggal --}}
-            <div class="form-group">
-                <label for="date">Tanggal (Opsional)</label>
-                <input type="date" id="date" name="date" class="form-control @error('date') is-invalid @enderror" 
-                        value="{{ old('date', $menu_data->date ? $menu_data->date->format('Y-m-d') : null) }}">
-                @error('date')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            {{-- Lokasi --}}
-            <div class="form-group">
-                <label for="location">Lokasi/Sumber (Opsional)</label>
-                <input type="text" id="location" name="location" class="form-control @error('location') is-invalid @enderror" 
-                        value="{{ old('location', $menu_data->location) }}">
-                @error('location')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            {{-- Link --}}
-            <div class="form-group">
-                <label for="link">Tautan Eksternal (Opsional)</label>
-                <input type="url" id="link" name="link" class="form-control @error('link') is-invalid @enderror" 
-                        value="{{ old('link', $menu_data->link) }}">
-                @error('link')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                <label for="tipe">Tipe Menu</label>
+                <div>
+                    <div class="form-check form-check-inline">
+                        <input 
+                            class="form-check-input" 
+                            type="radio" 
+                            name="tipe" 
+                            id="tipe_statis" 
+                            value="statis" 
+                            {{ old('tipe', $menu->tipe) == 'statis' ? 'checked' : '' }} 
+                            required
+                        >
+                        <label class="form-check-label" for="tipe_statis">Statis (Satu Halaman)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input 
+                            class="form-check-input" 
+                            type="radio" 
+                            name="tipe" 
+                            id="tipe_dinamis" 
+                            value="dinamis" 
+                            {{ old('tipe', $menu->tipe) == 'dinamis' ? 'checked' : '' }} 
+                            required
+                        >
+                        <label class="form-check-label" for="tipe_dinamis">Dinamis (Postingan / Berita)</label>
+                    </div>
+                </div>
+                @error('tipe')
+                    <div class="text-danger small">{{ $message }}</div>
                 @enderror
             </div>
 
-            {{-- Gambar --}}
+            {{-- Status --}}
             <div class="form-group">
-                <label for="img">Gambar Utama (Opsional, Max 2MB)</label>
-                <input type="file" id="img" name="img" class="form-control-file @error('img') is-invalid @enderror" accept="image/*">
-                @if ($menu_data->img)
-                    <p class="mt-2">Gambar saat ini: <a href="{{ asset('storage/' . $menu_data->img) }}" target="_blank">Lihat Gambar</a></p>
-                @endif
-                @error('img')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                <label for="status">Status</label>
+                <div>
+                    <div class="form-check form-check-inline">
+                        <input 
+                            class="form-check-input" 
+                            type="radio" 
+                            name="status" 
+                            id="status_aktif" 
+                            value="aktif" 
+                            {{ old('status', $menu->status) == 'aktif' ? 'checked' : '' }} 
+                            required
+                        >
+                        <label class="form-check-label" for="status_aktif">Aktif</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input 
+                            class="form-check-input" 
+                            type="radio" 
+                            name="status" 
+                            id="status_nonaktif" 
+                            value="nonaktif" 
+                            {{ old('status', $menu->status) == 'nonaktif' ? 'checked' : '' }} 
+                            required
+                        >
+                        <label class="form-check-label" for="status_nonaktif">Nonaktif</label>
+                    </div>
+                </div>
+                @error('status')
+                    <div class="text-danger small">{{ $message }}</div>
                 @enderror
-                <small class="form-text text-muted">Abaikan jika tidak ingin mengganti gambar.</small>
             </div>
 
+            {{-- Tombol Aksi --}}
             <div class="form-buttons">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Perbarui Konten
+                    <i class="fas fa-save"></i> Perbarui Menu
                 </button>
-                <a href="{{ route('admin.menu_data.index') }}" class="btn btn-secondary">Batal</a>
+                <a href="{{ route('admin.menu.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Batal
+                </a>
             </div>
         </form>
     </div>
 </div>
-@endsection
+@endsections

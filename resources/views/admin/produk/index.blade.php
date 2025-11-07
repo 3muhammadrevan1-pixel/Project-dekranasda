@@ -33,9 +33,7 @@
                     <th>ID</th> {{-- KOLOM BARU --}}
                     <th>Gambar</th>
                     <th>Nama Produk</th>
-                    <th>Deskripsi</th>
                     <th>Toko</th>
-                    <th>Alamat</th>
                     <th>Kategori</th>
                     <th>Type</th>
                     <th>Harga</th>
@@ -63,14 +61,8 @@
                         {{-- Nama Produk --}}
                         <td>{{ $product->name }}</td>
 
-                        {{-- Deskripsi (dibatasi 50 karakter) --}}
-                        <td>{{ Str::limit($product->desc, 50) }}</td>
-
                         {{-- Toko --}}
                         <td>{{ $product->store->name ?? 'Toko Tidak Ditemukan' }}</td>
-
-                        {{-- ALAMAT: DIGANTI DARI 'address' MENJADI 'alamat' --}}
-                        <td>{{ $product->store->alamat ?? 'N/A' }}</td>
 
                         {{-- Kategori & Tipe --}}
                         <td>{{ $product->category }}</td>
@@ -102,9 +94,9 @@
                         </td>
                     </tr>
                 @empty
-                    {{-- Pesan jika tidak ada data, colspan disesuaikan menjadi 10 --}}
+                    {{-- Pesan jika tidak ada data, colspan disesuaikan menjadi 8 --}}
                     <tr>
-                        <td colspan="10" class="text-center p-4 text-gray-500">
+                        <td colspan="8" class="text-center p-4 text-gray-500">
                             Tidak ada data produk yang tersedia.
                         </td>
                     </tr>
@@ -112,11 +104,22 @@
             </tbody>
         </table>
     </div>
+    @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->total() > 0)
+        <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
+            {{-- Informasi Halaman --}}
+            <div class="pagination-info" style="font-size: 0.9rem; color: #6b7280; padding: 0.5rem 0;">
+                Menampilkan 
+                <span style="font-weight: 600;">{{ $products->firstItem() }}</span>
+                sampai
+                <span style="font-weight: 600;">{{ $products->lastItem() }}</span>
+                dari total 
+                <span style="font-weight: 600;">{{ $products->total() }}</span> produk.
+            </div>
 
-    {{-- Pagination --}}
-    @if(isset($products) && method_exists($products, 'links'))
-        <div class="mt-4">
-            {{ $products->links() }}
+            {{-- Tautan Pagination menggunakan view kustom di page/pagenation.blade.php --}}
+            <div class="pagination-links-wrapper">
+                {{ $products->onEachSide(1)->links('page.pagenation') }}
+            </div>
         </div>
     @endif
 </div>

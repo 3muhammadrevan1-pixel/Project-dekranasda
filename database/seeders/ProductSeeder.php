@@ -32,20 +32,20 @@ class ProductSeeder extends Seeder
             'store_id'  => $store1->id, // Menggunakan ID Toko yang sudah diambil
             'price'     => 250000,
             'type'      => 'baju',
-            'img'       => '/storage/produk/pk8.jpg'
+            'img'       => 'produk/pk8.jpg'
         ]);
 
         // Variants untuk Batik, DENGAN DATA SIZE (Perbaikan: Menambahkan 'sizes')
         $variants = [
             [
                 'color' => 'Hijau',
-                'img'   => '/storage/produk/pk13.jpg',
+                'img'   => 'produk/pk13.jpg',
                 'price' => 250000,
                 'sizes' => ['S', 'M', 'L', 'XL'] // DATA SIZE DITAMBAHKAN
             ],
             [
                 'color' => 'Biru',
-                'img'   => '/storage/produk/pk5.jpg',
+                'img'   => 'produk/pk5.jpg',
                 'price' => 250000,
                 'sizes' => ['S', 'M', 'L'] // DATA SIZE DITAMBAHKAN
             ]
@@ -66,7 +66,7 @@ class ProductSeeder extends Seeder
             [
                 'name'      => 'Tas Anyaman Bambu',
                 'category'  => 'Terbaru',
-                'img'       => '/storage/produk/pk6.jpg',
+                'img'       => 'produk/pk6.jpg',
                 'price'     => 150000,
                 'desc'      => 'Tas anyaman bambu buatan pengrajin lokal.',
                 'store_id'  => $store1->id,
@@ -75,7 +75,7 @@ class ProductSeeder extends Seeder
             [
                 'name'      => 'Ukiran Kayu Jati',
                 'category'  => 'Kerajinan Kayu',
-                'img'       => '/storage/produk/p1.jpg',
+                'img'       => 'produk/p1.jpg',
                 'price'     => 500000,
                 'desc'      => 'Ukiran kayu jati dengan detail halus.',
                 'store_id'  => $store1->id,
@@ -93,7 +93,7 @@ class ProductSeeder extends Seeder
         $sepatu = Product::create([
             'name'      => 'Sepatu Kulit Bogor',
             'category'  => 'Unggulan',
-            'img'       => '/storage/produk/sepatu rajut.jpg',
+            'img'       => 'produk/sepatu rajut.jpg',
             'price'     => 300000,
             'desc'      => 'Sepatu kulit elegan dengan kualitas premium.',
             'store_id'  => $store2->id, // Menggunakan ID Toko yang sudah diambil
@@ -104,13 +104,13 @@ class ProductSeeder extends Seeder
         $sepatuVariants = [
             [
                 'color' => 'Hitam',
-                'img'   => '/storage/produk/s2.jpg',
+                'img'   => 'produk/s2.jpg',
                 'price' => 300000,
                 'sizes' => ['40', '41', '42', '43'] // DATA SIZE DITAMBAHKAN
             ],
             [
                 'color' => 'Coklat',
-                'img'   => '/storage/produk/s1.jpg',
+                'img'   => 'produk/s1.jpg',
                 'price' => 300000,
                 'sizes' => ['40', '42', '43'] // DATA SIZE DITAMBAHKAN
             ]
@@ -131,7 +131,7 @@ class ProductSeeder extends Seeder
             [
                 'name'      => 'Keramik Hias',
                 'category'  => 'Terbaru',
-                'img'       => '/storage/produk/pk2.jpg',
+                'img'       => 'produk/pk2.jpg',
                 'price'     => 75000,
                 'desc'      => 'Keramik hias dekoratif untuk rumah.',
                 'store_id'  => $store2->id,
@@ -140,7 +140,7 @@ class ProductSeeder extends Seeder
             [
                 'name'      => 'Elcraft',
                 'category'  => 'Terbaru',
-                'img'       => '/storage/produk/pk6.jpg',
+                'img'       => 'produk/pk6.jpg',
                 'price'     => 200000,
                 'desc'      => 'Tas rajut dari Elcraft yang unik dan cantik.',
                 'store_id'  => $store2->id,
