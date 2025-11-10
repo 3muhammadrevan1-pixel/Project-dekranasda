@@ -8,13 +8,18 @@ use App\Models\StatisPage;
 
 use Illuminate\Http\Request;
 
-
 class HomeController extends Controller
 {
     public function index()
     {
         // Muat semua produk termasuk store dan variants.
         $allProducts = Product::with(['store', 'variants'])->get();
+
+        // Produk unggulan = 10 produk dengan click_count tertinggi
+        $topProducts = Product::with(['store', 'variants'])
+            ->orderByDesc('click_count')
+            ->take(10)
+            ->get();
 
         // Siapkan data untuk JavaScript (JSON)
         $allProductsJs = $allProducts->map(function ($product) {
@@ -34,17 +39,16 @@ class HomeController extends Controller
                         'color' => $variant->color,
                         'img' => $variant->img ? asset('storage/' . $variant->img) : null,
                         'price' => $variant->price,
-                        // Asumsi sizes sudah tidak ada di model variant, hanya untuk jaga-jaga
-                       'sizes' => $variant->sizes ?? [],
+                        'sizes' => $variant->sizes ?? [],
                     ];
                 })
             ];
         });
 
+        // Galeri & Berita
         $galeri = TbMenuData::ofJenis('galeri')->take(6)->get();
-
-
         $news = TbMenuData::ofJenis('berita')->latest()->take(6)->get();
+
         // 🔸 Ambil Visi Misi Fokus
         $visiMisiPage = StatisPage::where('slug', 'visi-misi')->first();
         $visiMisi = $visiMisiPage ? json_decode($visiMisiPage->konten, true) : [];
@@ -62,6 +66,7 @@ class HomeController extends Controller
             'galeri',
             'allProducts',
             'allProductsJs',
+            'topProducts',
             'visi',
             'misi',
             'fokus',

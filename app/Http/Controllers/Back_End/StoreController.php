@@ -4,8 +4,7 @@ namespace App\Http\Controllers\Back_End;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Store; 
-
+use App\Models\Store;
 
 class StoreController extends Controller 
 {
@@ -15,9 +14,7 @@ class StoreController extends Controller
      */
     public function index()
     {
-        // PERBAIKAN: Mengubah 'desc' menjadi 'asc' untuk menampilkan ID terlama di atas
         $stores = Store::with('products')->orderBy('id', 'asc')->get(); 
-        
         return view('admin.toko.index', compact('stores')); 
     }
 
@@ -42,24 +39,25 @@ class StoreController extends Controller
 
         Store::create($validatedData);
 
-        return redirect()->route('admin.toko.index')
+        // Redirect dengan prefix dinamis
+        $rolePrefix = auth()->user()->role === 'operator' ? 'operator' : 'admin';
+        return redirect()->route($rolePrefix . '.toko.index')
             ->with('success', 'Toko berhasil ditambahkan! ✅');
     }
 
     /**
      * Tampilkan formulir untuk mengedit Toko tertentu (UPDATE - Edit Form).
-     * Menerima Store $toko (sesuai nama parameter route: {toko}).
+     * Menggunakan $store agar sesuai dengan route model binding operator.
      */
-    public function edit(Store $toko) // <-- DIKEMBALIKAN: Menggunakan $toko untuk Route Model Binding
+    public function edit(Store $store)
     {
-        // Mengirim data ke view dengan nama 'store' (agar sesuai dengan edit.blade.php)
-        return view('admin.toko.edit', ['store' => $toko]); 
+        return view('admin.toko.edit', compact('store'));
     }
 
     /**
      * Perbarui data Toko di database (UPDATE - Update).
      */
-    public function update(Request $request, Store $toko) // <-- DIKEMBALIKAN: Menggunakan $toko untuk Route Model Binding
+    public function update(Request $request, Store $store)
     {
         $validatedData = $request->validate([
             'name'      => 'required|string|max:100',
@@ -67,20 +65,22 @@ class StoreController extends Controller
             'telepon'   => 'nullable|string|max:20',
         ]);
 
-        $toko->update($validatedData);
+        $store->update($validatedData);
 
-        return redirect()->route('admin.toko.index')
+        $rolePrefix = auth()->user()->role === 'operator' ? 'operator' : 'admin';
+        return redirect()->route($rolePrefix . '.toko.index')
             ->with('success', 'Toko berhasil diperbarui! 💾');
     }
 
     /**
      * Hapus Toko dari database (DELETE).
      */
-    public function destroy(Store $toko)
+    public function destroy(Store $store)
     {
-        $toko->delete();
+        $store->delete();
 
-        return redirect()->route('admin.toko.index')
+        $rolePrefix = auth()->user()->role === 'operator' ? 'operator' : 'admin';
+        return redirect()->route($rolePrefix . '.toko.index')
             ->with('success', 'Toko berhasil dihapus! 🗑️');
     }
 }

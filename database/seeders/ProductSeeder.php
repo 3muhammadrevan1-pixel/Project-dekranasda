@@ -2,154 +2,209 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Product;
-use App\Models\Store;
 use App\Models\ProductVariant;
-// use App\Models\ProductSize; // Dihapus karena tabel sudah tidak ada
+use Illuminate\Support\Facades\DB;
 
 class ProductSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // PERBAIKAN: Mengambil Store yang sudah dibuat oleh StoreSeeder, BUKAN membuatnya lagi.
-        $store1 = Store::where('name', 'Bogor Square')->first();
-        $store2 = Store::where('name', 'Sengked Store')->first();
+        // Bersihkan tabel agar tidak duplikat
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Product::truncate();
+        ProductVariant::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // Peringatan: Pastikan StoreSeeder dipanggil sebelum ProductSeeder di DatabaseSeeder.php
-
-        // ============================
-        // PRODUK STORE 1
-        // ============================
-        $batik = Product::create([
-            'name'      => 'Batik Khas Bogor',
-            'category'  => 'Unggulan',
-            'desc'      => 'Batik motif khas Bogor dengan corak tradisional.',
-            'store_id'  => $store1->id, // Menggunakan ID Toko yang sudah diambil
-            'price'     => 250000,
-            'type'      => 'baju',
-            'img'       => 'produk/pk8.jpg'
-        ]);
-
-        // Variants untuk Batik, DENGAN DATA SIZE (Perbaikan: Menambahkan 'sizes')
-        $variants = [
+        // Data produk lengkap
+        $products = [
             [
-                'color' => 'Hijau',
-                'img'   => 'produk/pk13.jpg',
-                'price' => 250000,
-                'sizes' => ['S', 'M', 'L', 'XL'] // DATA SIZE DITAMBAHKAN
+                'id' => 1,
+                'store_id' => 1,
+                'name' => 'Loji Craft',
+                'desc' => 'Kemeja etnik Loji Craft, gaya lokal rasa global',
+                'img' => 'images/products/vGV1ung5DJ5iD61q3N2PkW74HF2iVB5v6jynM6B7.jpg',
+                'category' => 'Fashion',
+                'type' => 'warna_huruf',
+                'price' => 70000,
+                'click_count' => 1,
+                'variants' => [
+                    ['color' => 'Putih', 'img' => 'images/products/vGV1ung5DJ5iD61q3N2PkW74HF2iVB5v6jynM6B7.jpg', 'price' => 70000, 'sizes' => ['S','M','L','XL','XXL']],
+                    ['color' => 'Biru', 'img' => 'product_variants/5UXr430NN37DU0kg77vWgc7FkO2pp28MA3iT5Qdx.jpg', 'price' => 70000, 'sizes' => ['S','M','L','XL']],
+                ],
             ],
             [
-                'color' => 'Biru',
-                'img'   => 'produk/pk5.jpg',
-                'price' => 250000,
-                'sizes' => ['S', 'M', 'L'] // DATA SIZE DITAMBAHKAN
-            ]
-        ];
-
-        foreach ($variants as $v) {
-            ProductVariant::create([
-                'product_id' => $batik->id,
-                'color'      => $v['color'],
-                'img'        => $v['img'],
-                'price'      => $v['price'],
-                'sizes'      => $v['sizes'] // SIZE DIMASUKKAN
-            ]);
-        }
-
-        // Produk tanpa variants untuk store 1
-        $productsStore1 = [
-            [
-                'name'      => 'Tas Anyaman Bambu',
-                'category'  => 'Terbaru',
-                'img'       => 'produk/pk6.jpg',
-                'price'     => 150000,
-                'desc'      => 'Tas anyaman bambu buatan pengrajin lokal.',
-                'store_id'  => $store1->id,
-                'type'      => 'none'
-            ],
-            [
-                'name'      => 'Ukiran Kayu Jati',
-                'category'  => 'Kerajinan Kayu',
-                'img'       => 'produk/p1.jpg',
-                'price'     => 500000,
-                'desc'      => 'Ukiran kayu jati dengan detail halus.',
-                'store_id'  => $store1->id,
-                'type'      => 'none'
-            ],
-        ];
-
-        foreach ($productsStore1 as $p) {
-            Product::create($p);
-        }
-
-        // ============================
-        // PRODUK STORE 2
-        // ============================
-        $sepatu = Product::create([
-            'name'      => 'Sepatu Kulit Bogor',
-            'category'  => 'Unggulan',
-            'img'       => 'produk/sepatu rajut.jpg',
-            'price'     => 300000,
-            'desc'      => 'Sepatu kulit elegan dengan kualitas premium.',
-            'store_id'  => $store2->id, // Menggunakan ID Toko yang sudah diambil
-            'type'      => 'sepatu'
-        ]);
-
-        // Variants untuk Sepatu, DENGAN DATA SIZE (Perbaikan: Menambahkan 'sizes')
-        $sepatuVariants = [
-            [
-                'color' => 'Hitam',
-                'img'   => 'produk/s2.jpg',
+                'id' => 2,
+                'store_id' => 2,
+                'name' => 'Jaket Tracktop Parasut',
+                'desc' => 'Jual Jaket Tracktop Parasut Pria Wanita',
+                'img' => 'product_variants/QyBtrtI6qI0hUvu4SYoYFU1A2Qf3IeRAPu8yHgLN.jpg',
+                'category' => 'Fashion',
+                'type' => 'warna_huruf',
                 'price' => 300000,
-                'sizes' => ['40', '41', '42', '43'] // DATA SIZE DITAMBAHKAN
+                'click_count' => 4,
+                'variants' => [
+                    ['color' => 'Hitam', 'img' => 'product_variants/QyBtrtI6qI0hUvu4SYoYFU1A2Qf3IeRAPu8yHgLN.jpg', 'price' => 300000, 'sizes' => ['S','M','L','XL','XXL']],
+                    ['color' => 'Coklat', 'img' => 'product_variants/qTqZnRnv9UkWlCKrb17fKSr3S3X0U9Q1ee50R6VH.jpg', 'price' => 300000, 'sizes' => ['S','M','L','XL']],
+                    ['color' => 'Biru', 'img' => 'product_variants/0jTSiGY1IvwRUmvmm3no8pBdoSQn9d0zPfLAG4QJ.jpg', 'price' => 300000, 'sizes' => ['S','M','L','XL']],
+                ],
             ],
             [
-                'color' => 'Coklat',
-                'img'   => 'produk/s1.jpg',
+                'id' => 3,
+                'store_id' => 2,
+                'name' => 'Kemeja Wanita',
+                'desc' => 'Kemeja Wanita Dengan Desain Simpel Dan Elegan',
+                'img' => 'images/products/8EXyQsfHSiwBV8Zj8s2mAQShQGYaYiVt7x3lY3uF.jpg',
+                'category' => 'Fashion',
+                'type' => 'warna_huruf',
+                'price' => 200000,
+                'click_count' => 1,
+                'variants' => [
+                    ['color' => 'Pink', 'img' => 'images/products/8EXyQsfHSiwBV8Zj8s2mAQShQGYaYiVt7x3lY3uF.jpg', 'price' => 200000, 'sizes' => ['S','M','L','XL']],
+                    ['color' => 'Putih', 'img' => 'product_variants/EkxA5YtSgDUtSymJfZokQRh3KpNjLKYrMw5Ayuua.jpg', 'price' => 200000, 'sizes' => ['S','M','L','XL']],
+                ],
+            ],
+            [
+                'id' => 4,
+                'store_id' => 2,
+                'name' => 'Sepatu Ortuseight',
+                'desc' => 'Sepatu Lokal Original Untuk Running',
+                'img' => 'images/products/C1hmejAbAztfuFcZQB7BfqL3a8NtZzuoI5libdv5.jpg',
+                'category' => 'Fashion',
+                'type' => 'warna_angka',
+                'price' => 800000,
+                'click_count' => 3,
+                'variants' => [
+                    ['color' => 'Putih', 'img' => 'images/products/C1hmejAbAztfuFcZQB7BfqL3a8NtZzuoI5libdv5.jpg', 'price' => 800000, 'sizes' => ['38','39','40','41','42']],
+                    ['color' => 'Biru', 'img' => 'product_variants/lCjTOlpZ2mOYjMmVTzHHw5fLv6yp7uhPvVB3ElzP.jpg', 'price' => 800000, 'sizes' => ['38','39','40','41','42']],
+                ],
+            ],
+            [
+                'id' => 5,
+                'store_id' => 1,
+                'name' => 'Sepatu Pantofel Kulit',
+                'desc' => 'Sepatu Kulit',
+                'img' => 'images/products/9ZAutEVVa5dPnz0irXc1kJDOAWGq5ScGCgtSbRT4.webp',
+                'category' => 'Fashion',
+                'type' => 'warna_angka',
+                'price' => 400000,
+                'click_count' => 12,
+                'variants' => [
+                    ['color' => 'Hitam', 'img' => 'images/products/9ZAutEVVa5dPnz0irXc1kJDOAWGq5ScGCgtSbRT4.webp', 'price' => 400000, 'sizes' => ['38','39','40','41','42']],
+                    ['color' => 'Coklat', 'img' => 'product_variants/NG621u4ZG2lQU8Qfqnfb4ZpLvQmVDuIc0SSfec6Y.webp', 'price' => 400000, 'sizes' => ['38','40','42']],
+                ],
+            ],
+            [
+                'id' => 6,
+                'store_id' => 1,
+                'name' => 'Vas Bunga',
+                'desc' => 'Vas Bunga Untuk Mempercantik Rumahmu',
+                'img' => 'images/products/zyk04vrxwCILSlhkfdAQvfloa8Y6tEsu9bXJTtU2.jpg',
+                'category' => 'Kerajinan',
+                'type' => 'tunggal',
+                'price' => 100000,
+                'click_count' => 3,
+                'variants' => [],
+            ],
+            [
+                'id' => 7,
+                'store_id' => 1,
+                'name' => 'Topi Pria',
+                'desc' => null,
+                'img' => 'images/products/Bqycc9NyN5H2BzWHqB0388Wuk99PONSbOTgZAWtE.jpg',
+                'category' => 'Fashion',
+                'type' => 'warna',
+                'price' => 50000,
+                'click_count' => 0,
+                'variants' => [
+                    ['color' => 'Hitam', 'img' => 'images/products/Bqycc9NyN5H2BzWHqB0388Wuk99PONSbOTgZAWtE.jpg', 'price' => 50000, 'sizes' => []],
+                    ['color' => 'Putih', 'img' => 'product_variants/qcQlUDuxmFg74LqvvwlP2lOyBR0nrXOu4OSeJ64s.jpg', 'price' => 50000, 'sizes' => []],
+                ],
+            ],
+            [
+                'id' => 8,
+                'store_id' => 2,
+                'name' => 'Baju Lengan Panjang',
+                'desc' => 'Baju Lengan panjang',
+                'img' => 'product_variants/Z31mH5fxfa73aMPWKvnuumlNOhxhG1zFy5ztQ3No.jpg',
+                'category' => 'Fashion',
+                'type' => 'warna_huruf',
+                'price' => 70000,
+                'click_count' => 3,
+                'variants' => [
+                    ['color' => 'Coklat', 'img' => 'product_variants/Z31mH5fxfa73aMPWKvnuumlNOhxhG1zFy5ztQ3No.jpg', 'price' => 70000, 'sizes' => ['S','M','L','XL']],
+                    ['color' => 'Biru', 'img' => 'product_variants/C8kvfMufioMMGRkRGG1e5cORgkJpidT4ClGbKYGh.jpg', 'price' => 70000, 'sizes' => ['S','M','L','XL','XXL']],
+                ],
+            ],
+            [
+                'id' => 9,
+                'store_id' => 1,
+                'name' => 'Sepatu Running',
+                'desc' => 'Sepatu Untuk Running',
+                'img' => 'images/products/ukSXZjlpDPHVrgkoyu35ZtzU84ke6vauzD49AXLy.jpg',
+                'category' => 'Fashion',
+                'type' => 'warna_angka',
+                'price' => 600000,
+                'click_count' => 1,
+                'variants' => [
+                    ['color' => 'Hitam', 'img' => 'images/products/ukSXZjlpDPHVrgkoyu35ZtzU84ke6vauzD49AXLy.jpg', 'price' => 600000, 'sizes' => ['38','39','40','41','42']],
+                ],
+            ],
+            [
+                'id' => 10,
+                'store_id' => 1,
+                'name' => 'Ransel Siswa Sekolah',
+                'desc' => 'Ransel Untuk Sekolah',
+                'img' => 'images/products/sK7NTMiwh9UqnGqJWD3jpX2aM3oNbcRyscUrijtp.jpg',
+                'category' => 'Fashion',
+                'type' => 'warna',
                 'price' => 300000,
-                'sizes' => ['40', '42', '43'] // DATA SIZE DITAMBAHKAN
-            ]
-        ];
-
-        foreach ($sepatuVariants as $v) {
-            ProductVariant::create([
-                'product_id' => $sepatu->id,
-                'color'      => $v['color'],
-                'img'        => $v['img'],
-                'price'      => $v['price'],
-                'sizes'      => $v['sizes'] // SIZE DIMASUKKAN
-            ]);
-        }
-
-        // produk lain store 2
-        $productsStore2 = [
-            [
-                'name'      => 'Keramik Hias',
-                'category'  => 'Terbaru',
-                'img'       => 'produk/pk2.jpg',
-                'price'     => 75000,
-                'desc'      => 'Keramik hias dekoratif untuk rumah.',
-                'store_id'  => $store2->id,
-                'type'      => 'none'
+                'click_count' => 1,
+                'variants' => [
+                    ['color' => 'Biru', 'img' => 'images/products/sK7NTMiwh9UqnGqJWD3jpX2aM3oNbcRyscUrijtp.jpg', 'price' => 300000, 'sizes' => []],
+                    ['color' => 'Pink', 'img' => 'product_variants/L5YoEH6HeKTI6Uw3udLpVBjuYGGhCYRrkTdylnb2.jpg', 'price' => 300000, 'sizes' => []],
+                ],
             ],
             [
-                'name'      => 'Elcraft',
-                'category'  => 'Terbaru',
-                'img'       => 'produk/pk6.jpg',
-                'price'     => 200000,
-                'desc'      => 'Tas rajut dari Elcraft yang unik dan cantik.',
-                'store_id'  => $store2->id,
-                'type'      => 'none'
-            ]
+                'id' => 11,
+                'store_id' => 2,
+                'name' => 'Lovely Rattan',
+                'desc' => null,
+                'img' => 'images/products/kDmwFOKSoDQ18AK7h4CwmU8xVxxOiz6blxkhaDPz.jpg',
+                'category' => 'Kerajinan',
+                'type' => 'tunggal',
+                'price' => 70000,
+                'click_count' => 1,
+                'variants' => [],
+            ],
         ];
 
-        foreach ($productsStore2 as $p) {
-            Product::create($p);
+        foreach ($products as $p) {
+            $product = Product::create([
+                'id' => $p['id'],
+                'store_id' => $p['store_id'],
+                'name' => $p['name'],
+                'desc' => $p['desc'],
+                'img' => $p['img'],
+                'category' => $p['category'],
+                'type' => $p['type'],
+                'price' => $p['price'],
+                'click_count' => $p['click_count'],
+            ]);
+
+            // Hanya buat varian jika bukan tipe "tunggal"
+            if ($p['type'] !== 'tunggal' && !empty($p['variants'])) {
+                foreach ($p['variants'] as $v) {
+                    ProductVariant::create([
+                        'product_id' => $product->id,
+                        'color' => $v['color'],
+                        'img' => $v['img'],
+                        'price' => $v['price'],
+                        'sizes' => $v['sizes'],
+                    ]);
+                }
+            }
         }
     }
 }

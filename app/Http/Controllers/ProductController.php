@@ -9,31 +9,46 @@ use App\Models\Product;
 class ProductController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Tampilkan semua produk (frontend)
      */
     public function index()
     {
+        // Ambil semua kategori unik dari tabel products
         $categories = Product::select('category')->distinct()->pluck('category');
 
-        // ambil semua produk + relasi
-       $allProducts = Product::with(['store', 'variants'])->get();
+        // Ambil semua produk beserta relasinya, default urut terbaru
+        $allProducts = Product::with(['store', 'variants'])
+            ->orderByDesc('created_at')
+            ->get();
 
-        // Mapping buat kebutuhan JS/frontend
+        // Produk unggulan = 10 produk dengan click_count tertinggi
+        $topProducts = Product::with(['store', 'variants'])
+            ->orderByDesc('click_count')
+            ->take(10)
+            ->get();
+
+        // Produk terbaru = 10 produk terbaru
+        $latestProducts = Product::with(['store', 'variants'])
+            ->orderByDesc('created_at')
+            ->take(10)
+            ->get();
+
+        // Mapping untuk kebutuhan frontend (JavaScript)
         $allProductsJs = $allProducts->map(function ($product) {
             return [
                 'id'    => $product->id,
                 'name'  => $product->name,
                 'type'  => $product->type,
-                'img'   => $product->img ? asset('storage/' . $product->img) : null,
-                'price' => $product->price,
+                'img'   => $product->img ? asset('storage/' . $product->img) : (optional($product->variants->first())->img ? asset('storage/' . $product->variants->first()->img) : null),
+                'price' => $product->price ?? optional($product->variants->first())->price,
                 'desc'  => $product->desc,
-
+                'click_count' => $product->click_count,
+                'category' => strtolower($product->category),
                 'store' => $product->store ? [
                     'name'   => $product->store->name,
                     'alamat' => $product->store->alamat,
-                    'telepon' => $product->store->telepon ?? '-', // amanin telepon
+                    'telepon' => $product->store->telepon ?? '-',
                 ] : null,
-
                 'variants' => $product->variants->map(function ($variant) {
                     return [
                         'color' => $variant->color,
@@ -41,59 +56,44 @@ class ProductController extends Controller
                         'price' => $variant->price,
                         'sizes' => $variant->sizes ?? [],
                     ];
-                })
+                }),
             ];
         });
 
-       return view('produk.index', compact('categories', 'allProducts', 'allProductsJs'));
-
+        // Kirim semua data ke view
+        return view('produk.index', compact(
+            'categories',
+            'allProducts',
+            'topProducts',
+            'latestProducts',
+            'allProductsJs'
+        ));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Tambah 1 klik ke produk (dipanggil lewat AJAX dari frontend)
      */
-    public function create()
+    public function addClick($id)
     {
-        //
+        $product = Product::find($id);
+        if ($product) {
+            $product->increment('click_count');
+            return response()->json([
+                'success' => true,
+                'click_count' => $product->click_count
+            ]);
+        }
+        return response()->json([
+            'success' => false,
+            'message' => 'Produk tidak ditemukan'
+        ], 404);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    // --- Method CRUD default (belum dipakai di frontend) ---
+    public function create() {}
+    public function store(Request $request) {}
+    public function show(string $id) {}
+    public function edit(string $id) {}
+    public function update(Request $request, string $id) {}
+    public function destroy(string $id) {}
 }

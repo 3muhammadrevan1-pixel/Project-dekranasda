@@ -9,8 +9,10 @@
     <!-- Filter -->
     <div class="mb-4 text-center">
         <button class="btn btn-custom me-2 mb-2 filter-btn active" data-category="all">Semua</button>
+        <button class="btn btn-custom me-2 mb-2 filter-btn" data-category="unggulan">Unggulan</button>
+        <button class="btn btn-custom me-2 mb-2 filter-btn" data-category="terbaru">Terbaru</button>
         @foreach($categories as $cat)
-            <button class="btn btn-custom me-2 mb-2 filter-btn" data-category="{{ $cat }}">
+            <button class="btn btn-custom me-2 mb-2 filter-btn" data-category="{{ strtolower($cat) }}">
                 {{ $cat }}
             </button>
         @endforeach
@@ -19,9 +21,14 @@
     <!-- Grid Produk -->
     <div class="d-flex flex-wrap gap-3 justify-content-center" id="productGrid">
         @foreach($allProducts as $pr)
-            <div class="product-card" data-category="{{ strtolower($pr->category) }}">
+            @php
+                $isTop = $topProducts->contains('id', $pr->id);
+                $isLatest = $latestProducts->contains('id', $pr->id);
+            @endphp
+            <div class="product-card" 
+                 data-category="{{ strtolower($pr->category) }} {{ $isTop ? 'unggulan' : '' }} {{ $isLatest ? 'terbaru' : '' }}"
+                 data-click="{{ $pr->click_count }}">
                 <div class="card h-100 text-center">
-                    <!-- Gambar Produk Utama -->
                     <img src="{{ asset('storage/' . ($pr->img ?? optional($pr->variants->first())->img)) }}" 
                          class="card-img-top" 
                          alt="{{ $pr->name }}">
@@ -31,7 +38,13 @@
                         <p class="fw-bold harga-produk">
                             Rp {{ number_format($pr->price ?? optional($pr->variants->first())->price, 0, ',', '.') }}
                         </p>
-                        <button class="btn btn-custom w-100" data-bs-toggle="modal" data-bs-target="#productModal{{ $pr->id }}">
+                        <p class="text-muted small" id="clickCount{{ $pr->id }}">
+                            Dilihat: {{ $pr->click_count }} kali
+                        </p>
+                        <button class="btn btn-custom w-100 open-modal-btn" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#productModal{{ $pr->id }}" 
+                                data-product-id="{{ $pr->id }}">
                             Detail
                         </button>
                     </div>
@@ -43,7 +56,7 @@
                 <div class="modal-dialog modal-xl modal-dialog-centered">
                     <div class="modal-content p-0">
                         <div class="row g-0">
-                            <!-- Gambar -->
+                            <!-- Gambar Produk -->
                             <div class="col-md-6 bg-light d-flex align-items-center justify-content-center p-4">
                                 <img id="mainImg{{ $pr->id }}" 
                                      src="{{ asset('storage/' . ($pr->img ?? optional($pr->variants->first())->img)) }}" 
@@ -64,7 +77,6 @@
 
                                 <p class="text-muted mb-3">{{ $pr->desc }}</p>
 
-                                <!-- Info Toko -->
                                 @if($pr->store)
                                     <div class="mb-3 p-2 bg-light rounded">
                                         <p class="mb-1"><strong>Toko:</strong> {{ $pr->store->name }}</p>
@@ -72,7 +84,7 @@
                                     </div>
                                 @endif
 
-                                <!-- Warna (Variants) -->
+                                <!-- Pilih Warna -->
                                 @if($pr->variants->count())
                                     <label class="fw-semibold mb-1">Pilih Warna:</label>
                                     <div class="mb-3 d-flex flex-wrap gap-2">
@@ -88,12 +100,11 @@
                                     </div>
                                 @endif
 
-                                <!-- Ukuran (Size) -->
+                                <!-- Pilih Ukuran -->
                                 @php
                                     $firstVariant = $pr->variants->first();
                                     $productType = strtolower($pr->type ?? 'none'); 
                                 @endphp
-
                                 @if($productType != 'none' && $firstVariant && is_array($firstVariant->sizes) && count($firstVariant->sizes))
                                     <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
                                         <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
@@ -109,17 +120,14 @@
                                     </div>
                                 @endif
 
-                                <!-- Jumlah -->
                                 <label class="fw-semibold mb-1">Jumlah:</label>
                                 <input type="number" class="form-control mb-3 w-50" value="1" min="1" id="qty{{ $pr->id }}">
 
-                                <!-- Tombol WhatsApp -->
                                 <a href="#"
                                    class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
                                    data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
                                    data-store-name="{{ $pr->store->name ?? '' }}"
                                    data-store-address="{{ $pr->store->alamat ?? '' }}"
-                                   data-product-id="{{ $pr->id }}"
                                    onclick="sendWA({{ $pr->id }})">
                                     <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
                                 </a>
@@ -161,110 +169,143 @@
 
 @section('scripts')
 <script>
-    const allProducts = @json($allProductsJs);
+const allProducts = @json($allProductsJs);
 
-    // === FILTER PRODUK ===
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+// Tambah click_count saat modal dibuka
+document.querySelectorAll('.open-modal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.dataset.productId;
+        fetch(`/product/click/${id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success){
+                // Update langsung tampilan jumlah dilihat
+                const el = document.getElementById('clickCount'+id);
+                if(el) el.innerText = `Dilihat: ${data.click_count} kali`;
 
-            const category = btn.dataset.category.toLowerCase();
-            document.querySelectorAll('.product-card').forEach(card => {
-                card.style.display = (category === 'all' || card.dataset.category.toLowerCase() === category)
-                    ? 'flex'
-                    : 'none';
-            });
-        });
-    });
-
-    // === FORMAT RUPIAH ===
-    function formatRupiah(angka) {
-        return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    }
-
-    // === GANTI VARIANT (WARNA) ===
-    document.querySelectorAll('.color-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const id = this.dataset.product;
-            const color = this.dataset.color;
-            const img = this.dataset.img;
-            const price = this.dataset.price;
-
-            // Update gambar & harga
-            document.getElementById(`mainImg${id}`).src = img;
-            document.getElementById(`price${id}`).innerText = formatRupiah(price);
-
-            // Aktifkan warna terpilih
-            document.querySelectorAll(`#productModal${id} .color-btn`).forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-
-            // Update ukuran berdasarkan varian
-            const product = allProducts.find(p => p.id == id);
-            const variant = product.variants.find(v => v.color === color);
-            const sizesDiv = document.getElementById(`sizes${id}`);
-            sizesDiv.innerHTML = '';
-
-            if (variant.sizes && variant.sizes.length > 0) {
-                variant.sizes.forEach(s => {
-                    const btn = document.createElement("button");
-                    btn.className = "btn btn-outline-secondary btn-sm size-option";
-                    btn.innerText = s;
-                    btn.setAttribute('onclick', `selectSize(${id}, '${s}')`);
-                    sizesDiv.appendChild(btn);
-                });
-            } else {
-                const btn = document.createElement("button");
-                btn.className = "btn btn-outline-secondary btn-sm";
-                btn.innerText = "Tidak tersedia";
-                btn.disabled = true;
-                sizesDiv.appendChild(btn);
+                // Update data-click untuk sorting
+                const card = document.querySelector(`.product-card[data-category*="${id}"]`);
+                if(card) card.dataset.click = data.click_count;
             }
         });
     });
+});
 
-    // === PILIH SIZE ===
-    function selectSize(id, size) {
-        const sizesDiv = document.getElementById('sizes' + id);
-        sizesDiv.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));
-        const btn = Array.from(sizesDiv.querySelectorAll('.size-option')).find(b => b.innerText === size);
-        if (btn) btn.classList.add('active');
-    }
+// Filter produk
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
 
-    // === GANTI MODAL PRODUK ===
-    function switchModal(currentId, targetId) {
-        const current = document.getElementById(`productModal${currentId}`);
-        const target = document.getElementById(`productModal${targetId}`);
+        const category = btn.dataset.category.toLowerCase();
+        const container = document.getElementById('productGrid');
+        const cards = Array.from(container.querySelectorAll('.product-card'));
 
-        bootstrap.Modal.getInstance(current).hide();
-        new bootstrap.Modal(target).show();
-    }
+        cards.forEach(card => {
+            card.style.display = (category === 'all' || card.dataset.category.toLowerCase().includes(category))
+                ? 'flex'
+                : 'none';
+        });
 
-    // === KIRIM PESAN WHATSAPP ===
-    function sendWA(productId) {
-        const pr = allProducts.find(p => p.id == productId);
-        if (!pr) return;
+        // Sort ulang produk unggulan & terbaru saat filter
+        if(category === 'unggulan'){
+            cards.sort((a,b) => parseInt(b.dataset.click) - parseInt(a.dataset.click));
+            cards.forEach(c => container.appendChild(c));
+        } else if(category === 'terbaru'){
+            cards.sort((a,b) => b.dataset.category.includes('terbaru') - a.dataset.category.includes('terbaru'));
+            cards.forEach(c => container.appendChild(c));
+        }
+    });
+});
 
-        const qty = document.getElementById(`qty${productId}`).value || 1;
-        const selectedColor = document.querySelector(`#productModal${productId} .color-btn.active`)?.innerText || '';
-        const selectedSize = document.querySelector(`#sizes${productId} .size-option.active`)?.innerText || '';
+// Format Rupiah
+function formatRupiah(angka) {
+    return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
 
-        const waBtn = document.querySelector(`#productModal${productId} .btn-wa`);
-        const waNumber = waBtn.dataset.wa;
-        const storeName = waBtn.dataset.storeName || (pr.store?.name || '');
-        const storeAddress = waBtn.dataset.storeAddress || (pr.store?.alamat || '');
+// Variant warna
+document.querySelectorAll('.color-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const id = this.dataset.product;
+        const color = this.dataset.color;
+        const img = this.dataset.img;
+        const price = this.dataset.price;
 
-        let colorLine = selectedColor ? `Warna: ${selectedColor}\n` : '';
-        let sizeLine = selectedSize ? `Ukuran: ${selectedSize}\n` : '';
+        document.getElementById(`mainImg${id}`).src = img;
+        document.getElementById(`price${id}`).innerText = formatRupiah(price);
 
-        const message = `Halo Admin, saya ingin memesan:
+        document.querySelectorAll(`#productModal${id} .color-btn`).forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        const product = allProducts.find(p => p.id == id);
+        const variant = product.variants.find(v => v.color === color);
+        const sizesDiv = document.getElementById(`sizes${id}`);
+        sizesDiv.innerHTML = '';
+
+        if (variant.sizes && variant.sizes.length > 0) {
+            variant.sizes.forEach(s => {
+                const btn = document.createElement("button");
+                btn.className = "btn btn-outline-secondary btn-sm size-option";
+                btn.innerText = s;
+                btn.setAttribute('onclick', `selectSize(${id}, '${s}')`);
+                sizesDiv.appendChild(btn);
+            });
+        } else {
+            const btn = document.createElement("button");
+            btn.className = "btn btn-outline-secondary btn-sm";
+            btn.innerText = "Tidak tersedia";
+            btn.disabled = true;
+            sizesDiv.appendChild(btn);
+        }
+    });
+});
+
+// Pilih ukuran
+function selectSize(id, size) {
+    const sizesDiv = document.getElementById('sizes' + id);
+    sizesDiv.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));
+    const btn = Array.from(sizesDiv.querySelectorAll('.size-option')).find(b => b.innerText === size);
+    if (btn) btn.classList.add('active');
+}
+
+// Ganti modal produk
+function switchModal(currentId, targetId) {
+    const current = document.getElementById(`productModal${currentId}`);
+    const target = document.getElementById(`productModal${targetId}`);
+    bootstrap.Modal.getInstance(current).hide();
+    new bootstrap.Modal(target).show();
+}
+
+// Kirim WhatsApp
+function sendWA(productId) {
+    const pr = allProducts.find(p => p.id == productId);
+    if (!pr) return;
+    const qty = document.getElementById(`qty${productId}`).value || 1;
+    const selectedColor = document.querySelector(`#productModal${productId} .color-btn.active`)?.innerText || '';
+    const selectedSize = document.querySelector(`#sizes${productId} .size-option.active`)?.innerText || '';
+
+    const waBtn = document.querySelector(`#productModal${productId} .btn-wa`);
+    const waNumber = waBtn.dataset.wa;
+    const storeName = waBtn.dataset.storeName || (pr.store?.name || '');
+    const storeAddress = waBtn.dataset.storeAddress || (pr.store?.alamat || '');
+
+    let colorLine = selectedColor ? `Warna: ${selectedColor}\n` : '';
+    let sizeLine = selectedSize ? `Ukuran: ${selectedSize}\n` : '';
+
+    const message = `Halo Admin, saya ingin memesan:
 Produk: ${pr.name}
 Toko: ${storeName}
 Alamat: ${storeAddress}
 ${colorLine}${sizeLine}Jumlah: ${qty}`;
 
-        const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
-        window.open(waUrl, '_blank');
-    }
+    const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+}
 </script>
 @endsection

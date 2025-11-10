@@ -12,274 +12,312 @@ use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    /**
-     * Menampilkan daftar semua produk dengan paginasi 10 item per halaman.
-     */
+    // =====================================================
+    //                   PRODUK UTAMA
+    // =====================================================
+
+    private function rolePrefix()
+    {
+        return auth()->user()->role === 'operator' ? 'operator' : 'admin';
+    }
+
     public function index()
     {
-        // Paginasi diatur di sini: paginate(10) akan membatasi hasil menjadi 10 per halaman.
-        $products = Product::with(['store', 'variants'])->orderBy('id', 'asc')->paginate(10);
+        $products = Product::with(['store', 'variants'])
+            ->orderBy('id', 'asc')
+            ->paginate(10);
 
         return view('admin.produk.index', compact('products'));
     }
 
-    /**
-     * Menampilkan formulir untuk membuat produk baru.
-     */
     public function create()
     {
-        // Ambil daftar toko untuk dropdown
         $stores = Store::all(['id', 'name']);
-
         return view('admin.produk.create', compact('stores'));
     }
 
-    /**
-     * Menyimpan produk baru ke database dan varian utama jika diperlukan.
-     */
     public function store(Request $request)
     {
-        // 1. Validasi Data Dasar Produk
-        $validatedData = $request->validate([
+        $rolePrefix = $this->rolePrefix();
+
+        $rules = [
             'store_id' => 'required|exists:stores,id',
             'name' => 'required|string|max:150',
             'desc' => 'nullable|string',
             'category' => 'nullable|string|max:100',
-            'type' => 'nullable|string|max:100|in:Sepatu,Baju,None',
-            'price' => 'nullable|numeric|min:0',
-            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'type' => 'required|string|max:100|in:warna_angka,warna_huruf,warna,tunggal',
+            'price' => 'required|numeric|min:0',
+            'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ];
 
-            // VALIDASI KONDISIONAL UNTUK VARIAN UTAMA (Warna dan Ukuran)
-            'color' => [
-                // Warna wajib diisi jika Tipe adalah Sepatu, Baju, atau None (tapi bukan kosong)
-                Rule::requiredIf(fn () => in_array($request->input('type'), ['Sepatu', 'Baju', 'None'])),
-                'nullable',
-                'string',
-                'max:100',
-            ],
-            'sizes' => [
-                // Ukuran wajib diisi jika Tipe adalah Sepatu atau Baju
-                Rule::requiredIf(fn () => in_array($request->input('type'), ['Sepatu', 'Baju'])),
-                'nullable',
-                'string',
-                // Validasi Regex untuk Sepatu (Hanya Angka, Koma)
-                Rule::when($request->type === 'Sepatu', ['regex:/^[\d,]+$/', 'max:255']), 
-                // Validasi Regex untuk Baju (Hanya Huruf, Angka, Spasi, Koma)
-                Rule::when($request->type === 'Baju', ['regex:/^[\w\s,]+$/', 'max:255']),
-            ],
-        ]);
-
-        // 2. Upload Gambar (Logic Nyata)
-        $imgPath = null;
-        if ($request->hasFile('img')) {
-            // Simpan di 'public/images/products'
-            $imgPath = $request->file('img')->store('images/products', 'public');
+        switch ($request->type) {
+            case 'warna_angka':
+                $rules['color'] = 'required|string|max:100';
+                $rules['sizes'] = ['required', 'string', 'regex:/^\s*[0-9]+(\s*,\s*[0-9]+)*\s*$/'];
+                break;
+            case 'warna_huruf':
+                $rules['color'] = 'required|string|max:100';
+                $rules['sizes'] = ['required', 'string', 'regex:/^\s*[a-zA-Z]+(\s*,\s*[a-zA-Z]+)*\s*$/'];
+                break;
+            case 'warna':
+                $rules['color'] = 'required|string|max:100';
+                break;
         }
 
+        $validated = $request->validate($rules, [
+            'sizes.required' => 'Ukuran wajib diisi!',
+            'sizes.regex' => 'Ukuran tidak sesuai tipe produk!',
+            'price.required' => 'Harga wajib diisi!',
+            'price.min' => 'Harga tidak boleh negatif!',
+            'color.required' => 'Warna/Nama varian wajib diisi!',
+            'img.required' => 'Gambar produk wajib diisi!',
+        ]);
+
         try {
-            // 3. Simpan Produk Utama
+            $imgPath = $request->file('img')->store('images/products', 'public');
+
             $product = Product::create([
-                'store_id' => $validatedData['store_id'],
-                'name' => $validatedData['name'],
-                'desc' => $validatedData['desc'],
-                'category' => $validatedData['category'] ?? null,
-                'type' => $validatedData['type'] ?? null,
-                'price' => $validatedData['price'] ?? null,
+                'store_id' => $validated['store_id'],
+                'name' => $validated['name'],
+                'desc' => $validated['desc'] ?? null,
+                'category' => $validated['category'] ?? null,
+                'type' => $validated['type'],
+                'price' => $validated['price'],
                 'img' => $imgPath,
+                'color' => $validated['color'] ?? null,
+                'sizes' => isset($validated['sizes'])
+                    ? array_values(array_filter(array_map('trim', explode(',', $validated['sizes']))))
+                    : [],
             ]);
 
-            // 4. Buat Varian Utama jika Tipe produk bukan kosong
-            if (in_array($request->type, ['Sepatu', 'Baju', 'None'])) {
-                
-                $variantData = [
-                    'color' => $validatedData['color'],
-                    'price' => $validatedData['price'] ?? 0, // Ambil harga default dari produk utama
-                    'img' => $imgPath, // Gunakan gambar produk utama sebagai gambar varian default
-                ];
-
-                // Proses Ukuran hanya jika ada (Sepatu atau Baju)
-                if (in_array($request->type, ['Sepatu', 'Baju']) && isset($validatedData['sizes'])) {
-                    // Pecah string koma menjadi array, bersihkan spasi berlebih, dan hapus nilai kosong
-                    $sizesArray = array_map('trim', explode(',', $validatedData['sizes']));
-                    $variantData['sizes'] = array_filter($sizesArray);
-                } else {
-                    $variantData['sizes'] = null; // Tidak ada ukuran untuk tipe 'None'
-                }
-                
-                // Simpan varian
-                $product->variants()->create($variantData);
+            if (in_array($validated['type'], ['warna_angka', 'warna_huruf', 'warna'])) {
+                $product->variants()->create([
+                    'color' => $validated['color'],
+                    'price' => $validated['price'],
+                    'img' => $imgPath,
+                    'sizes' => isset($validated['sizes'])
+                        ? array_values(array_filter(array_map('trim', explode(',', $validated['sizes']))))
+                        : [],
+                ]);
             }
 
-            return redirect()->route('admin.produk.index')->with('success', 'Produk baru dan varian utama berhasil ditambahkan!');
+            return redirect()->route($rolePrefix . '.produk.index')
+                ->with('success', 'Produk baru berhasil ditambahkan!');
         } catch (\Exception $e) {
-            // Tangani error dan kembalikan user ke form dengan input lama
-            // Hapus gambar yang mungkin sudah terupload jika terjadi error pada saat simpan ke DB
-            if ($imgPath) {
-                 Storage::disk('public')->delete($imgPath);
-            }
-            return redirect()->back()->with('error', 'Gagal menyimpan produk: ' . $e->getMessage())->withInput();
+            if (!empty($imgPath)) Storage::disk('public')->delete($imgPath);
+            return back()->with('error', 'Gagal menyimpan produk: ' . $e->getMessage())->withInput();
         }
     }
 
-    /**
-     * Menampilkan detail produk dan variannya.
-     * Menggunakan Route Model Binding.
-     */
     public function show(Product $product)
     {
-        // Muat relasi varian (variants) produk DAN TOKO (store)
         $product->load(['variants', 'store']);
-
         return view('admin.produk.show', compact('product'));
     }
 
-    /**
-     * Menampilkan formulir untuk mengedit produk.
-     * Menggunakan Route Model Binding.
-     */
     public function edit(Product $product)
     {
         $stores = Store::all(['id', 'name']);
-
         return view('admin.produk.edit', compact('product', 'stores'));
     }
 
-    /**
-     * Memperbarui produk yang ada di database.
-     * Menggunakan Route Model Binding.
-     */
     public function update(Request $request, Product $product)
     {
-        // 1. Validasi
-        $validatedData = $request->validate([
+        $rolePrefix = $this->rolePrefix();
+
+        $validated = $request->validate([
             'store_id' => 'required|exists:stores,id',
             'name' => 'required|string|max:150',
             'desc' => 'nullable|string',
             'category' => 'nullable|string|max:100',
-            'type' => 'nullable|string|max:100',
-            'price' => 'nullable|numeric|min:0',
-            // 'sometimes' digunakan agar validasi file hanya berjalan jika file diunggah
-            'img' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'price' => 'required|numeric|min:0',
+            'img' => 'sometimes|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        // 2. Upload Gambar Baru (jika ada)
-        if ($request->hasFile('img')) {
-            // Hapus gambar lama
-            if ($product->img) {
-                Storage::disk('public')->delete($product->img);
-            }
-
-            // Logika upload gambar baru (Nyata)
-            $validatedData['img'] = $request->file('img')->store('images/products', 'public');
-        }
+        $validated['type'] = $product->type;
 
         try {
-            // 3. Update Produk
-            $product->update($validatedData);
+            if ($request->hasFile('img')) {
+                if ($product->img) Storage::disk('public')->delete($product->img);
+                $validated['img'] = $request->file('img')->store('images/products', 'public');
+            } else {
+                $validated['img'] = $product->img;
+            }
 
-            return redirect()->route('admin.produk.index')->with('success', 'Produk berhasil diperbarui!');
+            $product->update($validated);
+
+            if ($product->type !== 'tunggal') {
+                $firstVariant = $product->variants()->first();
+                if ($firstVariant) {
+                    $firstVariant->update([
+                        'price' => $validated['price'],
+                        'img' => $validated['img'],
+                    ]);
+                }
+            }
+
+            return redirect()->route($rolePrefix . '.produk.index')
+                ->with('success', 'Produk berhasil diperbarui!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal memperbarui produk: ' . $e->getMessage())->withInput();
+            if ($request->hasFile('img')) Storage::disk('public')->delete($validated['img']);
+            return back()->with('error', 'Gagal memperbarui produk: ' . $e->getMessage())->withInput();
         }
     }
 
-    /**
-     * Menghapus produk dari database.
-     * Menggunakan Route Model Binding.
-     */
     public function destroy(Product $product)
     {
+        $rolePrefix = $this->rolePrefix();
+
         try {
-            // Hapus gambar produk utama
-            if ($product->img) {
-                Storage::disk('public')->delete($product->img);
-            }
-            
-            // Produk akan dihapus. Varian akan terhapus jika diatur 'onDelete('cascade')' di migrasi.
-
+            if ($product->img) Storage::disk('public')->delete($product->img);
             $product->delete();
-
-            return redirect()->route('admin.produk.index')->with('success', 'Produk berhasil dihapus!');
+            return redirect()->route($rolePrefix . '.produk.index')->with('success', 'Produk berhasil dihapus!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus produk: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menghapus produk: ' . $e->getMessage());
         }
     }
 
-    // ===================================
-    // KUSTOM UNTUK PRODUCT VARIANT
-    // ===================================
+    // =====================================================
+    //              MANAJEMEN VARIAN PRODUK
+    // =====================================================
 
-    /**
-     * Menyimpan variant baru untuk produk tertentu.
-     */
+    public function createVariant(Product $product)
+    {
+        return view('admin.produk.create-variant', compact('product'));
+    }
+
     public function storeVariant(Request $request, Product $product)
     {
-        // PERBAIKAN: Memastikan validasi regex untuk sizes juga berlaku di sini
-        $request->validate([
-            'color' => 'required|string|max:100', 
-            'price' => 'nullable|numeric|min:0',
-            'sizes' => [
-                'nullable', 
+        $rolePrefix = $this->rolePrefix();
+
+        $rules = [
+            'color' => 'required|string|max:100',
+            'price' => 'required|numeric|min:0',
+            'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ];
+
+        if (in_array($product->type, ['warna_angka', 'warna_huruf'])) {
+            $rules['sizes'] = [
+                'required',
                 'string',
-                // Validasi sizes berdasarkan tipe produk utama yang sudah tersimpan
-                Rule::when($product->type === 'Sepatu', ['regex:/^[\d,]+$/', 'max:255']),
-                Rule::when($product->type === 'Baju', ['regex:/^[\w\s,]+$/', 'max:255']),
-            ],
-            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                Rule::when($product->type === 'warna_angka', ['regex:/^\s*[0-9]+(\s*,\s*[0-9]+)*\s*$/']),
+                Rule::when($product->type === 'warna_huruf', ['regex:/^\s*[a-zA-Z]+(\s*,\s*[a-zA-Z]+)*\s*$/']),
+            ];
+        }
+
+        $request->validate($rules, [
+            'sizes.required' => 'Ukuran wajib diisi!',
+            'sizes.regex' => 'Ukuran tidak sesuai tipe produk!',
+            'color.required' => 'Warna wajib diisi!',
+            'price.required' => 'Harga wajib diisi!',
+            'img.required' => 'Gambar varian wajib diisi!',
         ]);
 
-        // 2. PERSIAPAN DATA
         $data = $request->only(['color', 'price']);
+        $data['sizes'] = isset($request->sizes)
+            ? array_values(array_filter(array_map('trim', explode(',', $request->sizes))))
+            : [];
+        $data['img'] = $request->file('img')->store('product_variants', 'public');
 
-        // A. PEMROSESAN FIELD 'sizes'
-        if ($request->filled('sizes')) {
-            // Pecah string koma menjadi array, bersihkan spasi berlebih, dan hapus nilai kosong
-            $sizesArray = array_map('trim', explode(',', $request->sizes));
-            $data['sizes'] = array_filter($sizesArray);
-        } else {
-            $data['sizes'] = null;
-        }
-
-        // B. PENANGANAN GAMBAR
-        $data['img'] = null;
-        if ($request->hasFile('img')) {
-            // Simpan gambar ke storage dan dapatkan path-nya
-            $data['img'] = $request->file('img')->store('product_variants', 'public');
-        }
-
-        // 3. PROSES SIMPAN
         try {
-            // Simpan varian yang terikat pada produk ini menggunakan relasi
-            $product->variants()->create($data);
+            $variant = $product->variants()->create($data);
 
-            return redirect()->route('admin.produk.show', $product)->with('success', 'Varian produk berhasil ditambahkan!');
+            if ($product->variants()->count() === 1) {
+                $product->update([
+                    'price' => $variant->price,
+                    'img' => $variant->img,
+                ]);
+            }
+
+            return redirect()->route($rolePrefix . '.produk.show', $product)
+                ->with('success', 'Varian berhasil ditambahkan!');
         } catch (\Exception $e) {
-            // Tangani error, tampilkan pesan agar mudah didiagnosis
-            return redirect()->back()->with('error', 'Gagal menyimpan varian. Detail: ' . $e->getMessage())->withInput();
+            if (!empty($data['img'])) Storage::disk('public')->delete($data['img']);
+            return back()->with('error', 'Gagal menyimpan varian: ' . $e->getMessage())->withInput();
         }
     }
 
-    /**
-     * Menghapus variant.
-     * Menggunakan Route Model Binding untuk ProductVariant.
-     */
-    public function destroyVariant(ProductVariant $variant)
+    public function editVariant(ProductVariant $variant)
     {
-        // Simpan ID produk sebelum varian dihapus untuk redirect
-        $productId = $variant->product_id;
+        $variant->load('product');
+        return view('admin.produk.edit-variant', compact('variant'));
+    }
+
+    public function updateVariant(Request $request, ProductVariant $variant)
+    {
+        $rolePrefix = $this->rolePrefix();
+        $product = $variant->product;
+
+        $rules = [
+            'color' => 'required|string|max:100',
+            'price' => 'required|numeric|min:0',
+            'img' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ];
+
+        if (in_array($product->type, ['warna_angka', 'warna_huruf'])) {
+            $rules['sizes'] = [
+                'required',
+                'string',
+                Rule::when($product->type === 'warna_angka', ['regex:/^\s*[0-9]+(\s*,\s*[0-9]+)*\s*$/']),
+                Rule::when($product->type === 'warna_huruf', ['regex:/^\s*[a-zA-Z]+(\s*,\s*[a-zA-Z]+)*\s*$/']),
+            ];
+        }
+
+        $request->validate($rules);
+
+        $data = $request->only(['color', 'price']);
+        $data['sizes'] = isset($request->sizes)
+            ? array_values(array_filter(array_map('trim', explode(',', $request->sizes))))
+            : [];
+
+        $oldImg = $variant->img;
+        if ($request->hasFile('img')) {
+            $data['img'] = $request->file('img')->store('product_variants', 'public');
+            if ($oldImg) Storage::disk('public')->delete($oldImg);
+        } else {
+            $data['img'] = $oldImg;
+        }
 
         try {
-            // Hapus gambar varian dari storage
-            if ($variant->img) {
-                Storage::disk('public')->delete($variant->img);
+            $variant->update($data);
+
+            $firstVariant = $product->variants()->first();
+            if ($variant->id === $firstVariant->id) {
+                $product->update([
+                    'price' => $variant->price,
+                    'img' => $variant->img,
+                ]);
             }
 
+            return redirect()->route($rolePrefix . '.produk.show', $product)
+                ->with('success', 'Varian berhasil diperbarui!');
+        } catch (\Exception $e) {
+            if ($request->hasFile('img')) Storage::disk('public')->delete($data['img']);
+            return back()->with('error', 'Gagal memperbarui varian: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function destroyVariant(ProductVariant $variant)
+    {
+        $rolePrefix = $this->rolePrefix();
+        $product = $variant->product;
+
+        try {
+            if ($variant->img) Storage::disk('public')->delete($variant->img);
             $variant->delete();
 
-            // Redirect kembali ke halaman detail produk
-            return redirect()->route('admin.produk.show', $productId)->with('success', 'Varian berhasil dihapus.');
+            $firstVariant = $product->variants()->first();
+            if ($firstVariant) {
+                $product->update([
+                    'price' => $firstVariant->price,
+                    'img' => $firstVariant->img,
+                ]);
+            }
+
+            return redirect()->route($rolePrefix . '.produk.show', $product)
+                ->with('success', 'Varian berhasil dihapus!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus varian: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menghapus varian: ' . $e->getMessage());
         }
     }
 }

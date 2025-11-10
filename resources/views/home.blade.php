@@ -110,137 +110,161 @@
     <button class="scroll-btn right" onclick="scrollProduk(1)">&#10095;</button>
 
     <div class="produk-wrapper d-flex overflow-auto" id="produkContainer">
-        @foreach ($allProducts as $pr)
-            {{-- HANYA TAMPILKAN PRODUK DENGAN KATEGORI "Unggulan" --}}
-            @if ($pr->category === "Unggulan")
-                @php
-                    $firstVariant = $pr->variants->first();
+        @foreach ($topProducts as $pr)
+            @php
+                $firstVariant = $pr->variants->first();
 
-                    // MENGAMBIL PATH MENTAH DARI DATABASE (e.g., 'products/image.jpg')
-                    $rawProductImgPath = $pr->img ?? optional($firstVariant)->img;
-                    
-                    // MEMBUAT FULL URL (e.g., 'http://app/storage/products/image.jpg')
-                    $productImgUrl = $rawProductImgPath ? asset('storage/' . $rawProductImgPath) : asset('assets/default.jpg');
-                    
-                    $productPrice = $pr->price ?? optional($firstVariant)->price ?? 0;
+                $rawProductImgPath = $pr->img ?? optional($firstVariant)->img;
+                $productImgUrl = $rawProductImgPath ? asset('storage/' . $rawProductImgPath) : asset('assets/default.jpg');
+                
+                $productPrice = $pr->price ?? optional($firstVariant)->price ?? 0;
+                $availableSizes = optional($firstVariant)->sizes ?? [];
+                $availableSizes = array_filter($availableSizes);
+            @endphp
 
-                    // Ambil ukuran varian jika tersedia
-                    $availableSizes = optional($firstVariant)->sizes ?? [];
-                    $availableSizes = array_filter($availableSizes);
-                @endphp
-
-                <div class="product-card flex-shrink-0 me-3">
-                    <div class="card h-100 text-center">
-                        <img src="{{ $productImgUrl }}" class="card-img-top" alt="{{ $pr->name }}">
-                        <div class="card-body">
-                            <h6 class="card-title">{{ $pr->name }}</h6>
-                            <p class="fw-bold harga-produk">Rp {{ number_format($productPrice, 0, ',', '.') }}</p>
-                            <button class="btn btn-custom w-100" data-bs-toggle="modal" data-bs-target="#productModal{{ $pr->id }}">
-                                Detail
-                            </button>
-                        </div>
+            <div class="product-card flex-shrink-0 me-3">
+                <div class="card h-100 text-center">
+                    <img src="{{ $productImgUrl }}" class="card-img-top" alt="{{ $pr->name }}">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ $pr->name }}</h6>
+                        <p class="fw-bold harga-produk">Rp {{ number_format($productPrice, 0, ',', '.') }}</p>
+                        {{-- Jumlah dilihat --}}
+                        <small class="text-muted d-block mb-2" id="clickCount{{ $pr->id }}">
+                            Dilihat: {{ $pr->click_count ?? 0 }} kali
+                        </small>
+                        <button class="btn btn-custom w-100" data-bs-toggle="modal" data-bs-target="#productModal{{ $pr->id }}">
+                            Detail
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Modal Produk -->
-                <div class="modal fade" id="productModal{{ $pr->id }}" tabindex="-1">
-                    <div class="modal-dialog modal-xl modal-dialog-centered">
-                        <div class="modal-content p-0 border-0 rounded-3 shadow-lg overflow-hidden position-relative">
-                            <div class="row g-0">
-                                <!-- Gambar -->
-                                <div class="col-md-6 bg-light d-flex flex-column align-items-center justify-content-center p-4">
-                                    <!-- FIX: Menggunakan $rawProductImgPath untuk membuat URL yang benar -->
-                                    <img id="mainImg{{ $pr->id }}"
-                                         src="{{ $rawProductImgPath ? asset('storage/' . $rawProductImgPath) : asset('assets/default.jpg') }}"
-                                         alt="{{ $pr->name }}" 
-                                         class="img-fluid">
+            <!-- Modal Produk -->
+            <div class="modal fade" id="productModal{{ $pr->id }}" tabindex="-1">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content p-0 border-0 rounded-3 shadow-lg overflow-hidden position-relative">
+                        <div class="row g-0">
+                            <div class="col-md-6 bg-light d-flex flex-column align-items-center justify-content-center p-4">
+                                <img id="mainImg{{ $pr->id }}" src="{{ $productImgUrl }}" alt="{{ $pr->name }}" class="img-fluid">
+                            </div>
+                            <div class="col-md-6 p-4 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h4 class="modal-title">{{ $pr->name }}</h4>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
+                                <h5 class="text-danger fw-bold mb-3" id="price{{ $pr->id }}">
+                                    Rp {{ number_format($productPrice, 0, ',', '.') }}
+                                </h5>
+                                <small class="text-muted mb-3 d-block" id="modalClickCount{{ $pr->id }}">
+                                    Dilihat: {{ $pr->click_count ?? 0 }} kali
+                                </small>
+                                <p class="text-muted mb-3">{{ $pr->desc ?? 'Deskripsi tidak tersedia' }}</p>
 
-                                <!-- Detail -->
-                                <div class="col-md-6 p-4 d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <h4 class="modal-title">{{ $pr->name }}</h4>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                @if($pr->store)
+                                    <div class="mb-3 p-2 bg-light rounded">
+                                        <p class="mb-1"><strong>Toko:</strong> {{ $pr->store->name }}</p>
+                                        <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ $pr->store->alamat }}</p>
+                                    </div>
+                                @endif
+
+                                @if($pr->variants->count())
+                                    <div class="mb-3">
+                                        <label class="fw-semibold mb-2 d-block">Pilih Warna:</label>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @foreach($pr->variants as $variant)
+                                                @php
+                                                    $variantImg = $variant->img ? asset('storage/' . $variant->img) : $productImgUrl;
+                                                @endphp
+                                                <button type="button"
+                                                        class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}"
+                                                        data-product="{{ $pr->id }}"
+                                                        data-color="{{ $variant->color }}"
+                                                        data-img="{{ $variantImg }}"
+                                                        data-price="{{ $variant->price ?? $productPrice }}">
+                                                    {{ ucfirst($variant->color) }}
+                                                </button>
+                                            @endforeach
+                                        </div>
                                     </div>
 
-                                    <h5 class="text-danger fw-bold mb-3" id="price{{ $pr->id }}">
-                                        Rp {{ number_format($productPrice, 0, ',', '.') }}
-                                    </h5>
-
-                                    <p class="text-muted mb-3">{{ $pr->desc ?? 'Deskripsi tidak tersedia' }}</p>
-
-                                    @if($pr->store)
-                                        <div class="mb-3 p-2 bg-light rounded">
-                                            <p class="mb-1"><strong>Toko:</strong> {{ $pr->store->name }}</p>
-                                            <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ $pr->store->alamat }}</p>
-                                        </div>
-                                    @endif
-
-                                    {{-- Pilih Warna --}}
-                                    @if($pr->variants->count())
-                                        <div class="mb-3">
-                                            <label class="fw-semibold mb-2 d-block">Pilih Warna:</label>
-                                            <div class="d-flex flex-wrap gap-2">
-                                                @foreach($pr->variants as $variant)
-                                                    @php
-                                                        // Menggunakan $variant->img untuk membuat URL variant yang benar
-                                                        $variantImg = $variant->img ? asset('storage/' . $variant->img) : $productImgUrl;
-                                                    @endphp
+                                    @if(!empty($availableSizes))
+                                        <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
+                                            <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
+                                            <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
+                                                @foreach($availableSizes as $s)
                                                     <button type="button"
-                                                            class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}"
-                                                            data-product="{{ $pr->id }}"
-                                                            data-color="{{ $variant->color }}"
-                                                            data-img="{{ $variantImg }}"
-                                                            data-price="{{ $variant->price ?? $productPrice }}">
-                                                         {{ ucfirst($variant->color) }}
-                                                     </button>
+                                                            class="btn btn-outline-secondary btn-sm size-option"
+                                                            onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
+                                                        {{ $s }}
+                                                    </button>
                                                 @endforeach
                                             </div>
                                         </div>
+                                    @endif
+                                @endif
 
-                                        {{-- Pilih Ukuran --}}
-                                        @if(!empty($availableSizes))
-                                            <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
-                                                <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
-                                                <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
-                                                    @foreach($availableSizes as $s)
-                                                        <button type="button"
-                                                                class="btn btn-outline-secondary btn-sm size-option"
-                                                                onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
-                                                             {{ $s }}
-                                                         </button>
-                                                     @endforeach
-                                                 </div>
-                                             </div>
-                                         @endif
-                                     @endif
+                                <div class="mb-3">
+                                    <label class="fw-semibold mb-2 d-block">Jumlah:</label>
+                                    <input type="number" class="form-control w-50" value="1" min="1" id="qty{{ $pr->id }}">
+                                </div>
 
-                                     {{-- Jumlah --}}
-                                     <div class="mb-3">
-                                         <label class="fw-semibold mb-2 d-block">Jumlah:</label>
-                                         <input type="number" class="form-control w-50" value="1" min="1" id="qty{{ $pr->id }}">
-                                     </div>
-
-                                     {{-- WhatsApp --}}
-                                     <a href="#"
-                                         class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
-                                         data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
-                                         data-store-name="{{ $pr->store->name ?? '' }}"
-                                         data-store-address="{{ $pr->store->alamat ?? '' }}"
-                                         onclick="sendWA({{ $pr->id }})">
-                                         <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
-                                     </a>
-                                 </div>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-                 <!-- END Modal -->
-             @endif
-         @endforeach
-     </div>
+                                <a href="#"
+                                   class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
+                                   data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
+                                   data-store-name="{{ $pr->store->name ?? '' }}"
+                                   data-store-address="{{ $pr->store->alamat ?? '' }}"
+                                   onclick="sendWA({{ $pr->id }})">
+                                   <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
 </section>
 
+<!-- Script untuk menambah click_count saat modal dibuka -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('show.bs.modal', function (event) {
+            const modalId = modal.id.replace('productModal', '');
+            const url = "{{ route('product.addClick', ['id' => '__ID__']) }}".replace('__ID__', modalId);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    // Update jumlah dilihat di halaman dan modal
+                    const clickEl = document.getElementById('clickCount' + modalId);
+                    const modalClickEl = document.getElementById('modalClickCount' + modalId);
+                    if(clickEl) clickEl.textContent = 'Dilihat: ' + data.click_count + ' kali';
+                    if(modalClickEl) modalClickEl.textContent = 'Dilihat: ' + data.click_count + ' kali';
+                }
+            })
+            .catch(err => console.error(err));
+        }, { once: true }); // ✅ Pastikan hanya sekali per modal
+    });
+});
+</script>
+
+ <!-- Tombol Lihat Semua Produk -->
+    <div class="text-center mt-4">
+        <a href="{{ url('/produk') }}" class="btn btn-custom px-4 py-2 fw-semibold">
+            Lihat Semua Produk
+        </a>
+    </div>
 
 <!-- Berita Compact Responsive Swipe -->
 <section id="berita" class="container py-5">
