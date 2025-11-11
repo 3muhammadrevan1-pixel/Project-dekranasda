@@ -6,9 +6,8 @@ body {
     padding-top: 70px;
 }
 :root {
-  scroll-padding-top: 70px; /* sama kayak tinggi navbar */
+    scroll-padding-top: 70px; /* sama kayak tinggi navbar */
 }
-
 
 /* ===== NAVBAR BASE ===== */
 .navbar-modern {
@@ -95,14 +94,12 @@ body {
 }
 
 .dropdown-menu {
-  display: none;
+    display: none;
 }
 
 .nav-item.dropdown.show .dropdown-menu {
-  display: block;
+    display: block;
 }
-
-
 
 /* ===== RESPONSIVE ADJUSTMENTS ===== */
 
@@ -150,9 +147,8 @@ body {
     }
 }
 .dropdown-toggle::after {
-  display: none !important;
+    display: none !important;
 }
-
 
 /* Header */
 header {
@@ -184,7 +180,6 @@ header h1 {
     font-weight: bold;
     margin-bottom: 10px;
     color: #fff;
-
 }
 
 header p {
@@ -492,11 +487,11 @@ header p {
     border-radius: 50%;
 }
 .scroll-btn.left {
-    left: -15px;   
+    left: -15px;
 }
 .scroll-btn.right {
     right: -15px;
-}   
+}
 .scroll-btn:hover {
     background: #d2b48c;
 }
@@ -606,43 +601,38 @@ header p {
     font-size: 0.85rem;
 }
 
-/* MOBILE & IPAD: swipe horizontal */
-@media (max-width: 991.98px) {
-    .berita-wrapper {
-        display: flex;
-        flex-direction: row;
-        gap: 1rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 5px;
-    }
-
-    .berita-wrapper::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    .berita-wrapper::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 3px;
-    }
-
-    .berita-card {
-        flex: 0 0 70%; /* lebar kartu mobile & tablet */
-        max-width: 300px;
-    }
+/* BERITA COMPACT RESPONSIVE SWIPE UNIVERSAL */
+.berita-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    padding-bottom: 10px;
 }
 
-/* DESKTOP: grid 3 kolom */
-@media (min-width: 992px) {
-    .berita-wrapper {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-    }
-    .berita-card {
-        flex: unset;
-        max-width: unset;
-    }
+/* scrollbar styling */
+.berita-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.berita-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+/* CARD STYLE */
+.berita-card {
+    flex: 0 0 auto;
+    width: 300px;
+    min-width: 280px;
+    scroll-snap-align: start;
+}
+
+/* optional: scroll snap agar perpindahan halus per card */
+.berita-wrapper {
+    scroll-snap-type: x mandatory;
 }
 
 /* Geser modal galeri sedikit ke bawah biar tidak nabrak navbar */
@@ -808,23 +798,30 @@ header p {
     text-decoration: none;
     transition: all 0.3s ease;
 }
-.btn-back-full:hover { background-color: #8c6b57; transform: translateY(-1px); color: #fff; }
-.btn-back-full i { font-size: 1.2rem; margin-right: 6px; }
+.btn-back-full:hover {
+    background-color: #8c6b57;
+    transform: translateY(-1px);
+    color: #fff;
+}
+.btn-back-full i {
+    font-size: 1.2rem;
+    margin-right: 6px;
+}
 
 /* Header responsif font */
 header h1 {
-  font-size: clamp(1.8rem, 5vw, 3rem);
+    font-size: clamp(1.8rem, 5vw, 3rem);
 }
 
 header p {
-  font-size: clamp(1rem, 3vw, 1.2rem);
+    font-size: clamp(1rem, 3vw, 1.2rem);
 }
 
 /* Animasi modal galeri lebih halus */
 .modal-image {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .modal-image.active {
-  transform: scale(1.02);
+    transform: scale(1.02);
 }

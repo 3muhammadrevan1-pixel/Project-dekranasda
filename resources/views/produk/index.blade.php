@@ -25,7 +25,8 @@
                 $isTop = $topProducts->contains('id', $pr->id);
                 $isLatest = $latestProducts->contains('id', $pr->id);
             @endphp
-            <div class="product-card" 
+            <div class="product-card"
+                 data-id="{{ $pr->id }}"
                  data-category="{{ strtolower($pr->category) }} {{ $isTop ? 'unggulan' : '' }} {{ $isLatest ? 'terbaru' : '' }}"
                  data-click="{{ $pr->click_count }}">
                 <div class="card h-100 text-center">
@@ -148,8 +149,9 @@
                                                 <p class="harga-produk small mb-2">
                                                     Rp {{ number_format($other->price ?? optional($other->variants->first())->price, 0, ',', '.') }}
                                                 </p>
-                                                <button class="btn btn-sm btn-custom w-100"
-                                                        onclick="switchModal({{ $pr->id }}, {{ $other->id }})">
+                                                <button class="btn btn-sm btn-custom w-100 related-btn"
+                                                        data-current="{{ $pr->id }}"
+                                                        data-target="{{ $other->id }}">
                                                     Lihat
                                                 </button>
                                             </div>
@@ -166,40 +168,47 @@
     </div>
 </div>
 @endsection
-
 @section('scripts')
 <script>
 const allProducts = @json($allProductsJs);
 
 // Tambah click_count saat modal dibuka
 document.querySelectorAll('.open-modal-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const id = btn.dataset.productId;
-        fetch(`/product/click/${id}`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success){
-                // Update langsung tampilan jumlah dilihat
-                const el = document.getElementById('clickCount'+id);
-                if(el) el.innerText = `Dilihat: ${data.click_count} kali`;
+    btn.addEventListener('click', () => updateClickCount(btn.dataset.productId));
+});
 
-                // Update data-click untuk sorting
-                const card = document.querySelector(`.product-card[data-category*="${id}"]`);
-                if(card) card.dataset.click = data.click_count;
-            }
-        });
+// Tambah click_count saat klik produk lain
+document.querySelectorAll('.related-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const current = btn.dataset.current;
+        const target = btn.dataset.target;
+        updateClickCount(target); // ✅ Tambah jumlah dilihat untuk produk tujuan
+        switchModal(current, target); // Tetap buka modal seperti biasa
     });
 });
 
-// Filter produk
+// Fungsi update click count
+function updateClickCount(id){
+    fetch(`/product/click/${id}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            const el = document.getElementById('clickCount'+id);
+            if(el) el.innerText = `Dilihat: ${data.click_count} kali`;
+        }
+    });
+}
+
+// Filter & urutan produk sesuai kategori
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+        // Ganti tombol aktif
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
@@ -207,30 +216,58 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
         const container = document.getElementById('productGrid');
         const cards = Array.from(container.querySelectorAll('.product-card'));
 
-        cards.forEach(card => {
-            card.style.display = (category === 'all' || card.dataset.category.toLowerCase().includes(category))
-                ? 'flex'
-                : 'none';
-        });
+        let visibleCards = [];
 
-        // Sort ulang produk unggulan & terbaru saat filter
-        if(category === 'unggulan'){
-            cards.sort((a,b) => parseInt(b.dataset.click) - parseInt(a.dataset.click));
-            cards.forEach(c => container.appendChild(c));
-        } else if(category === 'terbaru'){
-            cards.sort((a,b) => b.dataset.category.includes('terbaru') - a.dataset.category.includes('terbaru'));
-            cards.forEach(c => container.appendChild(c));
+        if (category === 'unggulan') {
+            // ✅ Unggulan: 10 produk dengan click tertinggi (terbanyak dilihat di atas)
+            // Urutan: Click Terbanyak -> Terendah
+            visibleCards = [...cards]
+                .sort((a, b) => parseInt(b.dataset.click) - parseInt(a.dataset.click))
+                .slice(0, 10);
+        } 
+        else if (category === 'terbaru') {
+            // ✅ Terbaru: 10 produk terbaru (id terbesar di atas)
+            // Urutan: ID Terbesar (Terbaru) -> Terkecil (Lama)
+            visibleCards = [...cards]
+                .sort((a, b) => parseInt(b.dataset.id) - parseInt(a.dataset.id))
+                .slice(0, 10);
+        } 
+        else if (category === 'all' || category === 'semua') {
+            // ✅ Semua: tampilkan semua produk, urut dari terbaru ke lama
+            // Urutan: ID Terbesar (Terbaru) -> Terkecil (Lama)
+            visibleCards = [...cards]
+                .sort((a, b) => parseInt(b.dataset.id) - parseInt(a.dataset.id));
+        } 
+        else {
+            // ✅ Kategori lain (misal fashion, makanan, dll)
+            // Urutan: ID Terbesar (Terbaru) -> Terkecil (Lama)
+            visibleCards = cards.filter(c =>
+                c.dataset.category.toLowerCase().includes(category)
+            ).sort((a, b) => parseInt(b.dataset.id) - parseInt(a.dataset.id));
         }
+
+        // Sembunyikan semua kartu dulu
+        cards.forEach(card => card.style.display = 'none');
+        
+        // Tampilkan hasil filter dan atur ulang posisinya di DOM
+        // Ini memastikan urutan tampilan sesuai dengan array visibleCards
+        visibleCards.forEach(c => {
+            c.style.display = 'flex';
+            container.appendChild(c); 
+        });
     });
 });
 
+
 // Format Rupiah
 function formatRupiah(angka) {
+// ... (fungsi tetap sama)
     return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
 // Variant warna
 document.querySelectorAll('.color-btn').forEach(btn => {
+// ... (fungsi tetap sama)
     btn.addEventListener('click', function () {
         const id = this.dataset.product;
         const color = this.dataset.color;
@@ -246,6 +283,7 @@ document.querySelectorAll('.color-btn').forEach(btn => {
         const product = allProducts.find(p => p.id == id);
         const variant = product.variants.find(v => v.color === color);
         const sizesDiv = document.getElementById(`sizes${id}`);
+        if (!sizesDiv) return;
         sizesDiv.innerHTML = '';
 
         if (variant.sizes && variant.sizes.length > 0) {
@@ -266,24 +304,24 @@ document.querySelectorAll('.color-btn').forEach(btn => {
     });
 });
 
-// Pilih ukuran
 function selectSize(id, size) {
+// ... (fungsi tetap sama)
     const sizesDiv = document.getElementById('sizes' + id);
     sizesDiv.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));
     const btn = Array.from(sizesDiv.querySelectorAll('.size-option')).find(b => b.innerText === size);
     if (btn) btn.classList.add('active');
 }
 
-// Ganti modal produk
 function switchModal(currentId, targetId) {
+// ... (fungsi tetap sama)
     const current = document.getElementById(`productModal${currentId}`);
     const target = document.getElementById(`productModal${targetId}`);
     bootstrap.Modal.getInstance(current).hide();
     new bootstrap.Modal(target).show();
 }
 
-// Kirim WhatsApp
 function sendWA(productId) {
+// ... (fungsi tetap sama)
     const pr = allProducts.find(p => p.id == productId);
     if (!pr) return;
     const qty = document.getElementById(`qty${productId}`).value || 1;
@@ -295,17 +333,13 @@ function sendWA(productId) {
     const storeName = waBtn.dataset.storeName || (pr.store?.name || '');
     const storeAddress = waBtn.dataset.storeAddress || (pr.store?.alamat || '');
 
-    let colorLine = selectedColor ? `Warna: ${selectedColor}\n` : '';
-    let sizeLine = selectedSize ? `Ukuran: ${selectedSize}\n` : '';
-
     const message = `Halo Admin, saya ingin memesan:
 Produk: ${pr.name}
 Toko: ${storeName}
 Alamat: ${storeAddress}
-${colorLine}${sizeLine}Jumlah: ${qty}`;
+${selectedColor ? `Warna: ${selectedColor}\n` : ''}${selectedSize ? `Ukuran: ${selectedSize}\n` : ''}Jumlah: ${qty}`;
 
-    const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
-    window.open(waUrl, '_blank');
+    window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, '_blank');
 }
 </script>
 @endsection

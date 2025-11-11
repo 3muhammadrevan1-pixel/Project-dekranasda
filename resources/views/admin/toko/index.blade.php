@@ -35,6 +35,7 @@
                 </tr>
             </thead>
             <tbody>
+                {{-- Data Toko harus berupa objek Paginator dari Controller (misal: Store::paginate(5)) --}}
                 @forelse ($stores as $toko)
                     <tr class="toko-row" onclick="toggleProduk('produk-{{ $toko->id }}', this)" style="border-bottom: none !important;"> 
                         <td style="text-align: center;">{{ $toko->id }}</td>
@@ -117,6 +118,24 @@
             </tbody>
         </table>
     </div>
+    
+    {{--- BAGIAN PAGINATION BARU DITAMBAHKAN DI SINI ---}}
+    @if ($stores instanceof \Illuminate\Pagination\LengthAwarePaginator && $stores->total() > 0)
+        <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
+            <div class="pagination-info" style="font-size: 0.9rem; color: #6b7280; padding: 0.5rem 0;">
+                Menampilkan 
+                <span style="font-weight: 600;">{{ $stores->firstItem() }}</span>
+                sampai
+                <span style="font-weight: 600;">{{ $stores->lastItem() }}</span>
+                dari total 
+                <span style="font-weight: 600;">{{ $stores->total() }}</span> toko.
+            </div>
+            <div class="pagination-links-wrapper">
+                {{-- Menggunakan custom view pagenation seperti di produk/index.blade.php --}}
+                {{ $stores->onEachSide(1)->links('page.pagenation') }}
+            </div>
+        </div>
+    @endif
 </div>
 
 <style>

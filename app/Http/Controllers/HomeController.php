@@ -45,9 +45,10 @@ class HomeController extends Controller
             ];
         });
 
-        // Galeri & Berita
-        $galeri = TbMenuData::ofJenis('galeri')->take(6)->get();
+       // 🔸 Galeri & Berita (ambil dari TbMenuData)
+        $galeriTerbaru = TbMenuData::ofJenis('galeri')->latest()->take(8)->get();
         $news = TbMenuData::ofJenis('berita')->latest()->take(6)->get();
+
 
         // 🔸 Ambil Visi Misi Fokus
         $visiMisiPage = StatisPage::where('slug', 'visi-misi')->first();
@@ -63,7 +64,7 @@ class HomeController extends Controller
 
         return view('home', compact(
             'news',
-            'galeri',
+            'galeriTerbaru',
             'allProducts',
             'allProductsJs',
             'topProducts',

@@ -166,18 +166,7 @@ class ProductSeeder extends Seeder
                     ['color' => 'Pink', 'img' => 'product_variants/L5YoEH6HeKTI6Uw3udLpVBjuYGGhCYRrkTdylnb2.jpg', 'price' => 300000, 'sizes' => []],
                 ],
             ],
-            [
-                'id' => 11,
-                'store_id' => 2,
-                'name' => 'Lovely Rattan',
-                'desc' => null,
-                'img' => 'images/products/kDmwFOKSoDQ18AK7h4CwmU8xVxxOiz6blxkhaDPz.jpg',
-                'category' => 'Kerajinan',
-                'type' => 'tunggal',
-                'price' => 70000,
-                'click_count' => 1,
-                'variants' => [],
-            ],
+           
         ];
 
         foreach ($products as $p) {

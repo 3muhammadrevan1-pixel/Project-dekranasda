@@ -9,8 +9,16 @@
 @endphp
 
 <div class="content">
-    <div class="header-actions">
+    <div class="header-actions" style="display: flex; justify-content: space-between; align-items: center;">
         <h2>Daftar Produk</h2>
+        
+        {{-- TOMBOL BARU: Link ke halaman Sampah --}}
+        {{-- Menggunakan inline style sederhana untuk membedakannya jika custom CSS 'btn-trash' tidak tersedia --}}
+        <a href="{{ route($rolePrefix . '.produk.trash') }}" class="btn" 
+           style="background-color: #f0ad4e; color: white; border-radius: 5px; padding: 10px 15px; margin-left: auto; margin-right: 10px;">
+            <i class="fas fa-trash-restore"></i> Sampah ({{ \App\Models\Product::onlyTrashed()->count() }})
+        </a>
+
         {{-- Tombol Tambah Produk --}}
         <a href="{{ route($rolePrefix . '.produk.create') }}" class="btn btn-add">
             <i class="fas fa-plus"></i> Tambah Produk
@@ -72,11 +80,11 @@
                                 <i class="fas fa-edit"></i>
                             </a>
 
-                            {{-- Form Hapus --}}
-                            <form action="{{ route($rolePrefix . '.produk.destroy', $product) }}" method="POST" class="inline-form" onsubmit="return confirm('Yakin ingin menghapus produk ini?')">
+                            {{-- Form Hapus (Pindah ke Sampah / Soft Delete) --}}
+                            <form action="{{ route($rolePrefix . '.produk.destroy', $product) }}" method="POST" class="inline-form" onsubmit="return confirm('Yakin ingin memindahkan produk {{ $product->name }} ke Sampah?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-delete">
+                                <button type="submit" class="btn btn-delete" title="Pindah ke Sampah">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>

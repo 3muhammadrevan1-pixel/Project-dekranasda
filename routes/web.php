@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\BeritaController;
-use App\Http\Controllers\ProductController; 
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\OrganisasiController;
 use App\Http\Controllers\GaleriController;
@@ -52,7 +52,6 @@ Route::prefix('about')->group(function () {
 // ==========================================
 // 2. LOGIN & LOGOUT (AUTH)
 // ==========================================
-
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -72,9 +71,19 @@ Route::prefix('admin')->middleware(['auth', 'check_role:admin'])->group(function
         ->parameters(['menu_data' => 'menu_data']);
 
     Route::resource('toko', \App\Http\Controllers\Back_End\StoreController::class)
-    ->names('admin.toko')
-    ->parameters(['toko' => 'store']); // <-- tambahkan ini
+        ->names('admin.toko')
+        ->parameters(['toko' => 'store']);
 
+    // === Produk Soft Delete Routes (ADMIN) ===
+    Route::get('produk/trash', [\App\Http\Controllers\Back_End\ProductController::class, 'trash'])
+        ->name('admin.produk.trash');
+
+    Route::post('produk/{id}/restore', [\App\Http\Controllers\Back_End\ProductController::class, 'restore'])
+        ->name('admin.produk.restore');
+
+    Route::delete('produk/{id}/forceDelete', [\App\Http\Controllers\Back_End\ProductController::class, 'forceDelete'])
+        ->name('admin.produk.forceDelete');
+    // =========================================
 
     Route::resource('produk', \App\Http\Controllers\Back_End\ProductController::class)
         ->names('admin.produk')
@@ -83,12 +92,16 @@ Route::prefix('admin')->middleware(['auth', 'check_role:admin'])->group(function
     // Product Variant
     Route::get('produk/{product}/variant/create', [\App\Http\Controllers\Back_End\ProductController::class, 'createVariant'])
         ->name('admin.produk.createVariant');
+
     Route::post('produk/{product}/variant', [\App\Http\Controllers\Back_End\ProductController::class, 'storeVariant'])
         ->name('admin.produk.storeVariant');
+
     Route::get('variant/{variant}/edit', [\App\Http\Controllers\Back_End\ProductController::class, 'editVariant'])
         ->name('admin.produk.editVariant');
+
     Route::put('variant/{variant}', [\App\Http\Controllers\Back_End\ProductController::class, 'updateVariant'])
         ->name('admin.produk.updateVariant');
+
     Route::delete('variant/{variant}', [\App\Http\Controllers\Back_End\ProductController::class, 'destroyVariant'])
         ->name('admin.produk.destroyVariant');
 
@@ -102,12 +115,25 @@ Route::prefix('admin')->middleware(['auth', 'check_role:admin'])->group(function
 // 4. ROUTE OPERATOR
 // ==========================================
 Route::prefix('operator')->middleware(['auth', 'check_role:operator'])->group(function () {
-    Route::get('/dashboard', fn() => view('operator.dashboard'))->name('operator.dashboard');
+
+    // Dashboard Operator (menggunakan AdminController@index agar data $stats ikut terambil)
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('operator.dashboard');
 
     // === Toko (CRUD)
     Route::resource('toko', \App\Http\Controllers\Back_End\StoreController::class)
         ->names('operator.toko')
         ->parameters(['toko' => 'store']);
+
+    // === Produk Soft Delete Routes (OPERATOR) ===
+    Route::get('produk/trash', [\App\Http\Controllers\Back_End\ProductController::class, 'trash'])
+        ->name('operator.produk.trash');
+
+    Route::post('produk/{id}/restore', [\App\Http\Controllers\Back_End\ProductController::class, 'restore'])
+        ->name('operator.produk.restore');
+
+    Route::delete('produk/{id}/forceDelete', [\App\Http\Controllers\Back_End\ProductController::class, 'forceDelete'])
+        ->name('operator.produk.forceDelete');
+    // ============================================
 
     // === Produk (CRUD)
     Route::resource('produk', \App\Http\Controllers\Back_End\ProductController::class)
@@ -117,13 +143,16 @@ Route::prefix('operator')->middleware(['auth', 'check_role:operator'])->group(fu
     // === Variant Produk (CRUD)
     Route::get('produk/{product}/variant/create', [\App\Http\Controllers\Back_End\ProductController::class, 'createVariant'])
         ->name('operator.produk.createVariant');
+
     Route::post('produk/{product}/variant', [\App\Http\Controllers\Back_End\ProductController::class, 'storeVariant'])
         ->name('operator.produk.storeVariant');
+
     Route::get('variant/{variant}/edit', [\App\Http\Controllers\Back_End\ProductController::class, 'editVariant'])
         ->name('operator.produk.editVariant');
+
     Route::put('variant/{variant}', [\App\Http\Controllers\Back_End\ProductController::class, 'updateVariant'])
         ->name('operator.produk.updateVariant');
+
     Route::delete('variant/{variant}', [\App\Http\Controllers\Back_End\ProductController::class, 'destroyVariant'])
         ->name('operator.produk.destroyVariant');
 });
-

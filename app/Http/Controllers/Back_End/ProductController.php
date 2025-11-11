@@ -12,22 +12,38 @@ use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    // =====================================================
-    //                   PRODUK UTAMA
-    // =====================================================
-
+    
     private function rolePrefix()
     {
         return auth()->user()->role === 'operator' ? 'operator' : 'admin';
     }
 
+    /**
+     * Tampilkan daftar produk aktif (default Laravel Soft Deletes)
+     * Menggunakan pagination dan eager loading untuk performa.
+     */
     public function index()
     {
+        // Secara default, Product::get() atau Product::paginate() hanya mengambil data yang belum di-soft delete
         $products = Product::with(['store', 'variants'])
             ->orderBy('id', 'asc')
             ->paginate(10);
 
         return view('admin.produk.index', compact('products'));
+    }
+
+    /**
+     * BARU: Tampilkan daftar produk yang di-Soft Delete (Sampah/Trash)
+     * Menggunakan scope onlyTrashed().
+     */
+    public function trash()
+    {
+        $products = Product::onlyTrashed() // Hanya ambil produk yang sudah dihapus (deleted_at IS NOT NULL)
+            ->with(['store', 'variants'])
+            ->orderBy('deleted_at', 'desc') // Diurutkan berdasarkan waktu dihapus terbaru
+            ->paginate(10);
+
+        return view('admin.produk.trash', compact('products'));
     }
 
     public function create()
@@ -84,10 +100,6 @@ class ProductController extends Controller
                 'type' => $validated['type'],
                 'price' => $validated['price'],
                 'img' => $imgPath,
-                'color' => $validated['color'] ?? null,
-                'sizes' => isset($validated['sizes'])
-                    ? array_values(array_filter(array_map('trim', explode(',', $validated['sizes']))))
-                    : [],
             ]);
 
             if (in_array($validated['type'], ['warna_angka', 'warna_huruf', 'warna'])) {
@@ -138,6 +150,7 @@ class ProductController extends Controller
 
         try {
             if ($request->hasFile('img')) {
+                // Jika gambar baru diunggah, hapus gambar lama
                 if ($product->img) Storage::disk('public')->delete($product->img);
                 $validated['img'] = $request->file('img')->store('images/products', 'public');
             } else {
@@ -149,6 +162,7 @@ class ProductController extends Controller
             if ($product->type !== 'tunggal') {
                 $firstVariant = $product->variants()->first();
                 if ($firstVariant) {
+                    // Jika varian ada, update harga dan gambar varian pertama
                     $firstVariant->update([
                         'price' => $validated['price'],
                         'img' => $validated['img'],
@@ -164,18 +178,68 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Mengubah menjadi Soft Delete (pindah ke Sampah)
+     * Hanya set deleted_at. Gambar dan varian tetap di database.
+     */
     public function destroy(Product $product)
     {
         $rolePrefix = $this->rolePrefix();
 
         try {
-            if ($product->img) Storage::disk('public')->delete($product->img);
-            $product->delete();
-            return redirect()->route($rolePrefix . '.produk.index')->with('success', 'Produk berhasil dihapus!');
+            // Memanggil Soft Delete (mengisi kolom deleted_at)
+            // Relasi ProductVariant TIDAK menggunakan SoftDeletes, jadi varian tetap ada
+            $product->delete(); 
+            return redirect()->route($rolePrefix . '.produk.index')->with('success', 'Produk berhasil dipindahkan ke Sampah!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menghapus produk: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memindahkan produk ke Sampah: ' . $e->getMessage());
         }
     }
+
+    /**
+     * BARU: Memulihkan produk dari Sampah (Restore)
+     */
+    public function restore($id)
+    {
+        $rolePrefix = $this->rolePrefix();
+        // Cari produk HANYA di sampah (onlyTrashed)
+        $product = Product::onlyTrashed()->findOrFail($id);
+
+        try {
+            $product->restore(); // Mengubah deleted_at menjadi NULL
+            return redirect()->route($rolePrefix . '.produk.trash')->with('success', 'Produk berhasil dipulihkan!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memulihkan produk: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * BARU: Menghapus produk secara permanen dari database (Force Delete)
+     * Termasuk menghapus aset (gambar) dan relasi (varian).
+     */
+    public function forceDelete($id)
+    {
+        $rolePrefix = $this->rolePrefix();
+        // Cari produk HANYA di sampah (onlyTrashed)
+        $product = Product::onlyTrashed()->findOrFail($id);
+
+        try {
+            // 1. Hapus gambar terkait sebelum menghapus permanen
+            if ($product->img) Storage::disk('public')->delete($product->img);
+            
+            // 2. Hapus permanen semua varian yang terkait (ProductVariant tidak menggunakan SoftDeletes)
+            // Ini adalah langkah penting untuk menjaga integritas data.
+            $product->variants()->delete(); 
+
+            // 3. Hapus produk secara permanen dari database
+            $product->forceDelete();
+
+            return redirect()->route($rolePrefix . '.produk.trash')->with('success', 'Produk berhasil dihapus permanen!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus produk permanen: ' . $e->getMessage());
+        }
+    }
+
 
     // =====================================================
     //              MANAJEMEN VARIAN PRODUK

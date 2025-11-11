@@ -9,11 +9,12 @@ use App\Models\Product;
 use App\Models\Store;
 use App\Models\TbMenu; 
 use App\Models\TbMenuData; 
+use Illuminate\Support\Facades\Auth; // Diperlukan untuk Auth::user()
 
 class AdminController extends Controller
 {
     /**
-     * Menampilkan Dashboard Admin dengan data statistik.
+     * Menampilkan Dashboard Admin/Operator dengan data statistik.
      */
     public function index()
     {
@@ -27,7 +28,7 @@ class AdminController extends Controller
         $eventCount = TbMenuData::ofJenis('event')->count();
         $galeriCount = TbMenuData::ofJenis('galeri')->count();
         
-        //  Menghitung jumlah data Struktur Organisasi
+        // Menghitung jumlah data Struktur Organisasi
         $organisasiCount = TbMenuData::ofJenis('organisasi')->count();
 
         // 2. Kumpulkan data dalam array
@@ -42,6 +43,15 @@ class AdminController extends Controller
             'organisasiCount' => $organisasiCount,
         ];
         
+        // 3. Logika untuk memilih View berdasarkan Role
+        $userRole = Auth::user()->role ?? 'guest'; // Ambil role user yang login
+
+        if ($userRole === 'operator') {
+            // Jika role adalah operator, kembalikan view operator (yang sudah kita filter card-nya)
+            return view('operator.dashboard', compact('stats'));
+        }
+        
+        // Default: Jika role adalah admin, kembalikan view admin
         return view('admin.dashboard.index', compact('stats'));
     }
 }

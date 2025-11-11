@@ -10,11 +10,16 @@ class StoreController extends Controller
 {
     /**
      * Tampilkan daftar semua Toko (READ - Index).
-     * Diurutkan berdasarkan ID secara 'asc' (terlama di atas).
+     * Menggunakan pagination (5 item per halaman) dan eager loading produk.
      */
     public function index()
     {
-        $stores = Store::with('products')->orderBy('id', 'asc')->get(); 
+        // Mengubah ->get() menjadi ->paginate(5) untuk mengaktifkan penomoran halaman
+        // Data diurutkan berdasarkan ID secara 'asc' (terlama di atas).
+        $stores = Store::with('products')
+                      ->orderBy('id', 'asc')
+                      ->paginate(5); 
+
         return view('admin.toko.index', compact('stores')); 
     }
 

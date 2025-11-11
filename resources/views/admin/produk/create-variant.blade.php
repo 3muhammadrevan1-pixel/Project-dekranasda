@@ -48,7 +48,7 @@
 
             {{-- Warna/Nama Varian --}}
             <div class="form-group">
-                <label for="color">Warna/Nama Varian <span class="required">*</span></label>
+                <label for="color">Warna<span class="required"></span></label>
                 <input 
                     type="text" 
                     id="color" 
@@ -65,7 +65,7 @@
 
             {{-- Harga Tambahan --}}
             <div class="form-group">
-                <label for="price">Harga Tambahan <span class="required">*</span></label>
+                <label for="price">Harga <span class="required"></span></label>
                 <input 
                     type="number" 
                     id="price" 
@@ -81,24 +81,12 @@
                 @enderror
             </div>
 
-            {{-- Gambar Varian --}}
-            <div class="form-group">
-                <label for="img">Gambar Varian</label>
-                <input 
-                    type="file" 
-                    id="img" 
-                    name="img" 
-                    class="form-control file-input @error('img') is-invalid @enderror"
-                >
-                @error('img')
-                    <span class="error-message">{{ $message }}</span>
-                @enderror
-            </div>
+            
 
             {{-- Ukuran --}}
             @if($product->type === 'warna_angka')
             <div class="form-group">
-                <label for="sizes">Ukuran Angka <span class="required">*</span></label>
+                <label for="sizes">Ukuran Angka <span class="required"></span></label>
                 <input 
                     type="text" 
                     id="sizes" 
@@ -114,7 +102,7 @@
             </div>
             @elseif($product->type === 'warna_huruf')
             <div class="form-group">
-                <label for="sizes">Ukuran Huruf <span class="required">*</span></label>
+                <label for="sizes">Ukuran Huruf <span class="required"></span></label>
                 <input 
                     type="text" 
                     id="sizes" 
@@ -129,6 +117,19 @@
                 @enderror
             </div>
             @endif
+            {{-- Gambar Varian --}}
+            <div class="form-group">
+                <label for="img">Gambar Variant</label>
+                <input 
+                    type="file" 
+                    id="img" 
+                    name="img" 
+                    class="form-control file-input @error('img') is-invalid @enderror"
+                >
+                @error('img')
+                    <span class="error-message">{{ $message }}</span>
+                @enderror
+            </div>
 
             {{-- Tombol Aksi --}}
             <div class="form-actions mt-6">

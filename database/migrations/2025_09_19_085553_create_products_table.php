@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('type')->nullable(); // baju, sepatu, none
             $table->integer('price')->nullable(); 
             $table->timestamps();
+            
+            // BARIS PENTING: Menambahkan kolom 'deleted_at' untuk Soft Deletes
+            $table->softDeletes();
         });
     }
 

@@ -269,26 +269,31 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Berita Compact Responsive Swipe -->
 <section id="berita" class="container py-5">
     <h2 class="section-title mb-4 text-center">Berita Terkini</h2>
-    <div class="row g-4">
+
+    {{-- Pembungkus utama untuk swipe horizontal --}}
+    <div class="berita-wrapper">
         {{-- Loop menggunakan variabel $news dari HomeController --}}
         @foreach ($news as $n)
-            <div class="col-md-4">
+            <div class="berita-card">
                 <div class="card h-100 shadow-sm border-0">
-                    {{-- Mengakses kolom 'img' DENGAN ASSET STORAGE YANG BENAR --}}
+                    {{-- Gambar berita --}}
                     <img src="{{ asset('storage/'.$n->img) }}" class="card-img-top" alt="{{ $n->title }}">
+                    
                     <div class="card-body d-flex flex-column">
-                        {{-- Mengakses kolom 'title' --}}
+                        {{-- Judul berita --}}
                         <h5 class="card-title">{{ $n->title }}</h5>
                         
-                        {{-- FIX: Memformat kolom 'date' menjadi tanggal cantik --}}
-                        <small class="text-muted mb-2">{{ \Carbon\Carbon::parse($n->date)->format('d F Y') }}</small>
+                        {{-- Tanggal berita --}}
+                        <small class="text-muted mb-2">
+                            {{ \Carbon\Carbon::parse($n->date)->format('d F Y') }}
+                        </small>
                         
+                        {{-- Cuplikan isi berita --}}
                         <p class="card-text flex-grow-1">
-                            {{-- Mengakses kolom 'content' --}}
                             {{ Str::limit(strip_tags($n->content), 100) }}
                         </p>
                         
-                        {{-- Link ke detail berita --}}
+                        {{-- Tombol detail --}}
                         <a href="{{ route('berita.show', $n->id) }}" class="btn btn-custom mt-auto">
                             Baca Selengkapnya
                         </a>
@@ -305,16 +310,17 @@ document.addEventListener('DOMContentLoaded', function() {
 <section id="galeri" class="container py-5">
     <h2 class="section-title">Galeri</h2>
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
-        {{-- Loop menggunakan variabel $galeri --}}
-        @foreach ($galeri as $i => $g)
+        {{-- Loop menggunakan variabel $galeriTerbaru --}}
+        @foreach ($galeriTerbaru as $i => $g)
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm d-flex flex-column">
                     <div style="aspect-ratio: 4/3; overflow: hidden; border-radius:10px;">
-                        {{-- FIX 1: Menggunakan asset('storage/') --}}
+                        {{-- FIX: Menggunakan asset('storage/') --}}
                         <img src="{{ asset('storage/' . $g->img) }}" 
                             class="img-fluid gallery-img" 
                             alt="{{ $g->title ?? 'Galeri ' . ($i+1) }}" 
-                            data-bs-toggle="modal" data-bs-target="#galeriModal" data-index="{{ $i }}" 
+                            data-bs-toggle="modal" data-bs-target="#galeriModal" 
+                            data-index="{{ $i }}" 
                             style="width:100%; height:100%; object-fit:cover;">
                     </div>
                 </div>
@@ -488,7 +494,7 @@ function scrollProduk(direction){
 
 // --- FIX 2: SCRIPT GALERI DENGAN URL STORAGE YANG BENAR ---
 // Data galeri dari controller, pastikan URL storage-nya benar
-const galleryImages = @json($galeri->map(fn($g) => asset('storage/' . $g->img)));
+const galleryImages = @json($galeriTerbaru->map(fn($g) => asset('storage/' . $g->img)));
 let currentIndex = 0;
 const modalImg = document.getElementById('modalImg');
 
