@@ -1,130 +1,170 @@
- body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f7f5f0;
-      color: #333;
-      margin: 0;
-      padding-top: 70px;
-    }
+/* --- Event List Styles (dinamis_link.blade.php) --- */
 
-    .events {
-      padding: 40px 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-    }
-    .events h2 {
-      text-align: center;
-      color: #6d4c41;
-      margin-bottom: 30px;
-      font-size: 2.5rem;
-      font-weight: 700;
-    }
+body {
+    font-family: "Segoe UI", sans-serif;
+    background-color: #f7f5f0;
+    color: #333;
+    margin: 0;
+    padding-top: 70px; /* Jarak atas untuk navbar tetap */
+}
 
-    /* ======= Carousel Scroll Horizontal ======= */
-    .carousel-container {
-      display: flex;
-      overflow-x: auto;
-      scroll-behavior: smooth;
-      gap: 20px;
-      padding-bottom: 10px;
-    }
-    .carousel-container::-webkit-scrollbar {
-      height: 8px;
-    }
-    .carousel-container::-webkit-scrollbar-thumb {
-      background: #6d4c41;
-      border-radius: 5px;
-    }
+.events {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+}
+.events h2 {
+    text-align: center;
+    color: #6d4c41; /* Cokelat tua untuk judul */
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
 
-    /* ======= Event Card ======= */
+/* ======= Carousel Scroll Horizontal ======= */
+.carousel-container {
+    display: flex;
+    overflow-x: auto; /* Mengaktifkan scroll horizontal */
+    scroll-behavior: smooth;
+    gap: 20px;
+    padding-bottom: 10px;
+}
+.carousel-container::-webkit-scrollbar {
+    height: 8px;
+}
+.carousel-container::-webkit-scrollbar-thumb {
+    background: #a1866f; /* Warna scrollbar yang serasi */
+    border-radius: 5px;
+}
+.carousel-container::-webkit-scrollbar-track {
+    background: #e0d9cc;
+}
+
+/* ======= Event Card ======= */
+.event-card {
+    flex: 0 0 280px; /* Lebar default kartu desktop */
+    background-color: #fff;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.4s, box-shadow 0.4s;
+    display: flex;
+    flex-direction: column;
+}
+.event-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+}
+.event-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+.event-card-body {
+    padding: 15px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+}
+.event-card-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #5c4033;
+}
+.event-card-desc {
+    font-size: 14px;
+    color: #3e2f23;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    flex-grow: 1;
+}
+.event-meta {
+    font-size: 13px;
+    color: #6d4c41;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+}
+.event-meta i {
+    margin-right: 6px;
+}
+
+/* ======= Button ======= */
+.btn-custom {
+    background-color: #a1866f; /* Warna utama Dekranasda */
+    color: #fff;
+    border-radius: 30px;
+    padding: 8px 20px;
+    font-weight: bold;
+    text-align: center;
+    transition: 0.3s;
+    display: inline-block;
+    text-decoration: none;
+    margin-top: 10px; /* Tambahkan sedikit jarak dari deskripsi */
+}
+.btn-custom:hover {
+    background-color: #5c4033;
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* ======= Responsive Breakpoints ======= */
+@media (max-width: 1200px) {
+    /* Desktop kecil / iPad landscape */
     .event-card {
-      flex: 0 0 280px; /* default desktop card width */
-      background-color: #fff;
-      border-radius: 15px;
-      overflow: hidden;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      transition: transform 0.4s, box-shadow 0.4s;
-      display: flex;
-      flex-direction: column;
-    }
-    .event-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+        flex: 0 0 260px;
     }
     .event-card img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
+        height: 170px;
     }
-    .event-card-body {
-      padding: 15px 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      flex-grow: 1;
+}
+
+@media (max-width: 992px) {
+    /* Tablet landscape */
+    .event-card {
+        flex: 0 0 240px;
+    }
+    .event-card img {
+        height: 160px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Tablet portrait */
+    .event-card {
+        flex: 0 0 220px;
+    }
+    .event-card img {
+        height: 150px;
     }
     .event-card-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: #5c4033;
+        font-size: 16px;
     }
     .event-card-desc {
-      font-size: 14px;
-      color: #3e2f23;
-      line-height: 1.5;
-      margin-bottom: 12px;
-      flex-grow: 1;
+        font-size: 13px;
     }
-    .event-meta {
-      font-size: 13px;
-      color: #6d4c41;
-      margin-bottom: 6px;
-    }
-    .event-meta i {
-      margin-right: 6px;
-    }
+}
 
-    /* ======= Button ======= */
-    .btn-custom {
-      background-color: #a1866f;
-      color: #fff;
-      border-radius: 30px;
-      padding: 8px 20px;
-      font-weight: bold;
-      text-align: center;
-      transition: 0.3s;
-      display: inline-block;
-      text-decoration: none;
+@media (max-width: 576px) {
+    /* Mobile */
+    .events h2 {
+        font-size: 1.8rem;
+        margin-bottom: 25px;
     }
-    .btn-custom:hover {
-      background-color: #5c4033;
-      color: #fff;
-      text-decoration: none;
+    .event-card {
+        flex: 0 0 250px;
+    } /* card lebih lebar di mobile */
+    .event-card img {
+        height: 160px;
     }
-
-    /* ======= Responsive Breakpoints ======= */
-    @media (max-width: 1200px) { /* Desktop kecil / iPad landscape */
-      .event-card { flex: 0 0 260px; }
-      .event-card img { height: 170px; }
+    .event-card-title {
+        font-size: 16px;
     }
-
-    @media (max-width: 992px) { /* Tablet landscape */
-      .event-card { flex: 0 0 240px; }
-      .event-card img { height: 160px; }
+    .event-card-desc {
+        font-size: 13px;
     }
-
-    @media (max-width: 768px) { /* Tablet portrait */
-      .event-card { flex: 0 0 220px; }
-      .event-card img { height: 150px; }
-      .event-card-title { font-size: 16px; }
-      .event-card-desc { font-size: 13px; }
-    }
-
-    @media (max-width: 576px) { /* Mobile */
-      .events h2 { font-size: 1.8rem; margin-bottom: 25px; }
-      .event-card { flex: 0 0 250px; } /* card lebih lebar di mobile */
-      .event-card img { height: 160px; }
-      .event-card-title { font-size: 16px; }
-      .event-card-desc { font-size: 13px; }
-    }
+}

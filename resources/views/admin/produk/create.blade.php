@@ -219,6 +219,7 @@
             @error('img')
                 <span class="error-message">{{ $message }}</span>
             @enderror
+            <small class="text-muted">Ukuran maksimal 2MB</small>
         </div>
 
         {{-- Tombol Aksi --}}
@@ -246,6 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const sizeTextInput = document.getElementById('sizes_text');
     const productForm = document.getElementById('product-form');
     const priceInput = document.getElementById('price');
+    const imgInput = document.getElementById('img');
 
     // Tombol tambah kategori
     const addCategoryBtn = document.getElementById('add-category-btn');
@@ -307,11 +309,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     updateSizeFields(typeSelect.value);
 
+    // Validasi ukuran file gambar (maks 2MB)
+    imgInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file && file.size > 2 * 1024 * 1024) { // 2MB
+            alert('maaf Ukuran gambar melebihi 2MB! Silakan pilih gambar yang lebih kecil.');
+            this.value = ''; // reset input
+        }
+    });
+
     // Validasi sebelum submit
     productForm.addEventListener('submit', function(e) {
         let errors = [];
         const type = typeSelect.value;
-        const imgInput = document.getElementById('img');
 
         if (!imgInput.value) errors.push('Gambar produk wajib diisi!');
         if (!priceInput.value) errors.push('Harga produk wajib diisi!');

@@ -18,13 +18,8 @@ class ProductController extends Controller
         return auth()->user()->role === 'operator' ? 'operator' : 'admin';
     }
 
-    /**
-     * Tampilkan daftar produk aktif (default Laravel Soft Deletes)
-     * Menggunakan pagination dan eager loading untuk performa.
-     */
     public function index()
     {
-        // Secara default, Product::get() atau Product::paginate() hanya mengambil data yang belum di-soft delete
         $products = Product::with(['store', 'variants'])
             ->orderBy('id', 'asc')
             ->paginate(10);
@@ -32,15 +27,11 @@ class ProductController extends Controller
         return view('admin.produk.index', compact('products'));
     }
 
-    /**
-     * BARU: Tampilkan daftar produk yang di-Soft Delete (Sampah/Trash)
-     * Menggunakan scope onlyTrashed().
-     */
     public function trash()
     {
-        $products = Product::onlyTrashed() // Hanya ambil produk yang sudah dihapus (deleted_at IS NOT NULL)
+        $products = Product::onlyTrashed()
             ->with(['store', 'variants'])
-            ->orderBy('deleted_at', 'desc') // Diurutkan berdasarkan waktu dihapus terbaru
+            ->orderBy('deleted_at', 'desc')
             ->paginate(10);
 
         return view('admin.produk.trash', compact('products'));
@@ -59,18 +50,18 @@ class ProductController extends Controller
         $rules = [
             'store_id' => 'required|exists:stores,id',
             'name' => 'required|string|max:150',
-            'desc' => 'nullable|string',
+            'desc' => 'nullable|string', 
             'category' => 'nullable|string|max:100',
             'type' => 'required|string|max:100|in:warna_angka,warna_huruf,warna,tunggal',
             'price' => 'required|numeric|min:0',
-            'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2000',
         ];
 
         switch ($request->type) {
             case 'warna_angka':
                 $rules['color'] = 'required|string|max:100';
                 $rules['sizes'] = ['required', 'string', 'regex:/^\s*[0-9]+(\s*,\s*[0-9]+)*\s*$/'];
-                break;
+                break;                                      
             case 'warna_huruf':
                 $rules['color'] = 'required|string|max:100';
                 $rules['sizes'] = ['required', 'string', 'regex:/^\s*[a-zA-Z]+(\s*,\s*[a-zA-Z]+)*\s*$/'];
@@ -90,12 +81,13 @@ class ProductController extends Controller
         ]);
 
         try {
-            $imgPath = $request->file('img')->store('images/products', 'public');
+            $originalName = time() . '_' . $request->file('img')->getClientOriginalName();
+            $imgPath = $request->file('img')->storeAs('images/products', $originalName, 'public');
 
             $product = Product::create([
                 'store_id' => $validated['store_id'],
                 'name' => $validated['name'],
-                'desc' => $validated['desc'] ?? null,
+                'desc' => $validated['desc'] ?? null, 
                 'category' => $validated['category'] ?? null,
                 'type' => $validated['type'],
                 'price' => $validated['price'],
@@ -137,22 +129,23 @@ class ProductController extends Controller
     {
         $rolePrefix = $this->rolePrefix();
 
-        $validated = $request->validate([
+        $rules = [
             'store_id' => 'required|exists:stores,id',
             'name' => 'required|string|max:150',
-            'desc' => 'nullable|string',
+            'desc' => 'nullable|string', 
             'category' => 'nullable|string|max:100',
             'price' => 'required|numeric|min:0',
-            'img' => 'sometimes|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-        ]);
+            'img' => 'sometimes|image|mimes:jpeg,png,jpg,gif,webp|max:2000',
+        ];
 
+        $validated = $request->validate($rules);
         $validated['type'] = $product->type;
 
         try {
             if ($request->hasFile('img')) {
-                // Jika gambar baru diunggah, hapus gambar lama
                 if ($product->img) Storage::disk('public')->delete($product->img);
-                $validated['img'] = $request->file('img')->store('images/products', 'public');
+                $originalName = time() . '_' . $request->file('img')->getClientOriginalName();
+                $validated['img'] = $request->file('img')->storeAs('images/products', $originalName, 'public');
             } else {
                 $validated['img'] = $product->img;
             }
@@ -162,7 +155,6 @@ class ProductController extends Controller
             if ($product->type !== 'tunggal') {
                 $firstVariant = $product->variants()->first();
                 if ($firstVariant) {
-                    // Jika varian ada, update harga dan gambar varian pertama
                     $firstVariant->update([
                         'price' => $validated['price'],
                         'img' => $validated['img'],
@@ -178,17 +170,11 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * Mengubah menjadi Soft Delete (pindah ke Sampah)
-     * Hanya set deleted_at. Gambar dan varian tetap di database.
-     */
     public function destroy(Product $product)
     {
         $rolePrefix = $this->rolePrefix();
 
         try {
-            // Memanggil Soft Delete (mengisi kolom deleted_at)
-            // Relasi ProductVariant TIDAK menggunakan SoftDeletes, jadi varian tetap ada
             $product->delete(); 
             return redirect()->route($rolePrefix . '.produk.index')->with('success', 'Produk berhasil dipindahkan ke Sampah!');
         } catch (\Exception $e) {
@@ -196,42 +182,27 @@ class ProductController extends Controller
         }
     }
 
-    /**
-     * BARU: Memulihkan produk dari Sampah (Restore)
-     */
     public function restore($id)
     {
         $rolePrefix = $this->rolePrefix();
-        // Cari produk HANYA di sampah (onlyTrashed)
         $product = Product::onlyTrashed()->findOrFail($id);
 
         try {
-            $product->restore(); // Mengubah deleted_at menjadi NULL
+            $product->restore();
             return redirect()->route($rolePrefix . '.produk.trash')->with('success', 'Produk berhasil dipulihkan!');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal memulihkan produk: ' . $e->getMessage());
         }
     }
 
-    /**
-     * BARU: Menghapus produk secara permanen dari database (Force Delete)
-     * Termasuk menghapus aset (gambar) dan relasi (varian).
-     */
     public function forceDelete($id)
     {
         $rolePrefix = $this->rolePrefix();
-        // Cari produk HANYA di sampah (onlyTrashed)
         $product = Product::onlyTrashed()->findOrFail($id);
 
         try {
-            // 1. Hapus gambar terkait sebelum menghapus permanen
             if ($product->img) Storage::disk('public')->delete($product->img);
-            
-            // 2. Hapus permanen semua varian yang terkait (ProductVariant tidak menggunakan SoftDeletes)
-            // Ini adalah langkah penting untuk menjaga integritas data.
             $product->variants()->delete(); 
-
-            // 3. Hapus produk secara permanen dari database
             $product->forceDelete();
 
             return redirect()->route($rolePrefix . '.produk.trash')->with('success', 'Produk berhasil dihapus permanen!');
@@ -239,11 +210,6 @@ class ProductController extends Controller
             return back()->with('error', 'Gagal menghapus produk permanen: ' . $e->getMessage());
         }
     }
-
-
-    // =====================================================
-    //              MANAJEMEN VARIAN PRODUK
-    // =====================================================
 
     public function createVariant(Product $product)
     {
@@ -257,7 +223,7 @@ class ProductController extends Controller
         $rules = [
             'color' => 'required|string|max:100',
             'price' => 'required|numeric|min:0',
-            'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'img' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2000',
         ];
 
         if (in_array($product->type, ['warna_angka', 'warna_huruf'])) {
@@ -281,7 +247,9 @@ class ProductController extends Controller
         $data['sizes'] = isset($request->sizes)
             ? array_values(array_filter(array_map('trim', explode(',', $request->sizes))))
             : [];
-        $data['img'] = $request->file('img')->store('product_variants', 'public');
+
+        $originalName = time() . '_' . $request->file('img')->getClientOriginalName();
+        $data['img'] = $request->file('img')->storeAs('product_variants', $originalName, 'public');
 
         try {
             $variant = $product->variants()->create($data);
@@ -315,7 +283,7 @@ class ProductController extends Controller
         $rules = [
             'color' => 'required|string|max:100',
             'price' => 'required|numeric|min:0',
-            'img' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'img' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2000',
         ];
 
         if (in_array($product->type, ['warna_angka', 'warna_huruf'])) {
@@ -336,7 +304,8 @@ class ProductController extends Controller
 
         $oldImg = $variant->img;
         if ($request->hasFile('img')) {
-            $data['img'] = $request->file('img')->store('product_variants', 'public');
+            $originalName = time() . '_' . $request->file('img')->getClientOriginalName();
+            $data['img'] = $request->file('img')->storeAs('product_variants', $originalName, 'public');
             if ($oldImg) Storage::disk('public')->delete($oldImg);
         } else {
             $data['img'] = $oldImg;

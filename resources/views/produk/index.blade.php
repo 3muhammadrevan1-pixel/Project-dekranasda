@@ -3,6 +3,84 @@
 @section('title', 'Semua Produk')
 
 @section('content')
+<style>
+/* === Modal Styling === */
+.modal-xl {
+    max-width: 1000px;
+}
+
+.modal-content {
+    overflow: hidden;
+    border-radius: 16px;
+    border: none;
+}
+
+/* Scroll bagian kanan jika konten panjang */
+.modal-body-scroll {
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Batasi tinggi gambar */
+.modal .col-md-6 img {
+    max-height: 70vh;
+    object-fit: contain;
+}
+
+/* Deskripsi produk */
+.product-desc {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #555;
+    margin-top: 20px;
+}
+
+/* Produk lain di bawah */
+.related-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+.related-card {
+    min-width: 160px;
+    flex: 0 0 auto;
+}
+
+.related-card img {
+    height: 120px;
+    object-fit: cover;
+}
+
+/* Hilangkan garis border di bawah "Produk Lainnya" */
+.modal .border-top {
+    border-top: none !important;
+}
+
+/* Responsif untuk HP */
+@media (max-width: 768px) {
+    .modal .row.g-0 {
+        flex-direction: column;
+    }
+    .modal .col-md-6 {
+        width: 100%;
+    }
+    .modal-body-scroll {
+        max-height: none;
+        overflow-y: visible;
+    }
+    .modal .col-md-6 img {
+        max-height: 50vh;
+    }
+}
+</style>
+
 <div class="container py-5">
     <h2 class="section-title">Semua Produk</h2>
 
@@ -29,7 +107,7 @@
                  data-id="{{ $pr->id }}"
                  data-category="{{ strtolower($pr->category) }} {{ $isTop ? 'unggulan' : '' }} {{ $isLatest ? 'terbaru' : '' }}"
                  data-click="{{ $pr->click_count }}">
-                <div class="card h-100 text-center">
+                <div class="card h-100 text-center shadow-sm">
                     <img src="{{ asset('storage/' . ($pr->img ?? optional($pr->variants->first())->img)) }}" 
                          class="card-img-top" 
                          alt="{{ $pr->name }}">
@@ -67,77 +145,82 @@
 
                             <!-- Detail Produk -->
                             <div class="col-md-6 p-4 d-flex flex-column">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <h4 class="modal-title">{{ $pr->name }}</h4>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-
-                                <h5 class="text-danger fw-bold mb-3" id="price{{ $pr->id }}">
-                                    Rp {{ number_format($pr->price ?? optional($pr->variants->first())->price, 0, ',', '.') }}
-                                </h5>
-
-                                <p class="text-muted mb-3">{{ $pr->desc }}</p>
-
-                                @if($pr->store)
-                                    <div class="mb-3 p-2 bg-light rounded">
-                                        <p class="mb-1"><strong>Toko:</strong> {{ $pr->store->name }}</p>
-                                        <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ $pr->store->alamat }}</p>
+                                <div class="modal-body-scroll">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h4 class="modal-title">{{ $pr->name }}</h4>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                @endif
 
-                                <!-- Pilih Warna -->
-                                @if($pr->variants->count())
-                                    <label class="fw-semibold mb-1">Pilih Warna:</label>
-                                    <div class="mb-3 d-flex flex-wrap gap-2">
-                                        @foreach($pr->variants as $variant)
-                                            <button class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}"
-                                                    data-product="{{ $pr->id }}"
-                                                    data-color="{{ $variant->color }}"
-                                                    data-img="{{ asset('storage/' . $variant->img) }}"
-                                                    data-price="{{ $variant->price }}">
-                                                {{ $variant->color }}
-                                            </button>
-                                        @endforeach
-                                    </div>
-                                @endif
+                                    <h5 class="text-danger fw-bold mb-3" id="price{{ $pr->id }}">
+                                        Rp {{ number_format($pr->price ?? optional($pr->variants->first())->price, 0, ',', '.') }}
+                                    </h5>
 
-                                <!-- Pilih Ukuran -->
-                                @php
-                                    $firstVariant = $pr->variants->first();
-                                    $productType = strtolower($pr->type ?? 'none'); 
-                                @endphp
-                                @if($productType != 'none' && $firstVariant && is_array($firstVariant->sizes) && count($firstVariant->sizes))
-                                    <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
-                                        <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
-                                        <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
-                                            @foreach($firstVariant->sizes as $s)
-                                                <button type="button"
-                                                        class="btn btn-outline-secondary btn-sm size-option {{ $loop->first ? 'active' : '' }}"
-                                                        onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
-                                                    {{ $s }}
+                                    @if($pr->store)
+                                        <div class="mb-3 p-2 bg-light rounded">
+                                            <p class="mb-1"><strong>Toko:</strong> {{ $pr->store->name }}</p>
+                                            <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ $pr->store->alamat }}</p>
+                                        </div>
+                                    @endif
+
+                                    <!-- Pilih Warna -->
+                                    @if($pr->variants->count())
+                                        <label class="fw-semibold mb-1">Pilih Warna:</label>
+                                        <div class="mb-3 d-flex flex-wrap gap-2">
+                                            @foreach($pr->variants as $variant)
+                                                <button class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}"
+                                                        data-product="{{ $pr->id }}"
+                                                        data-color="{{ $variant->color }}"
+                                                        data-img="{{ asset('storage/' . $variant->img) }}"
+                                                        data-price="{{ $variant->price }}">
+                                                    {{ $variant->color }}
                                                 </button>
                                             @endforeach
                                         </div>
+                                    @endif
+
+                                    <!-- Pilih Ukuran -->
+                                    @php
+                                        $firstVariant = $pr->variants->first();
+                                        $productType = strtolower($pr->type ?? 'none'); 
+                                    @endphp
+                                    @if($productType != 'none' && $firstVariant && is_array($firstVariant->sizes) && count($firstVariant->sizes))
+                                        <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
+                                            <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
+                                            <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
+                                                @foreach($firstVariant->sizes as $s)
+                                                    <button type="button"
+                                                            class="btn btn-outline-secondary btn-sm size-option {{ $loop->first ? 'active' : '' }}"
+                                                            onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
+                                                        {{ $s }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <label class="fw-semibold mb-1">Jumlah:</label>
+                                    <input type="number" class="form-control mb-3 w-50" value="1" min="1" id="qty{{ $pr->id }}">
+
+                                    <a href="#"
+                                       class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
+                                       data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
+                                       data-store-name="{{ $pr->store->name ?? '' }}"
+                                       data-store-address="{{ $pr->store->alamat ?? '' }}"
+                                       onclick="sendWA({{ $pr->id }})">
+                                        <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
+                                    </a>
+
+                                    <!-- Deskripsi -->
+                                    <div class="product-desc">
+                                        {!! nl2br(e($pr->desc)) !!}
                                     </div>
-                                @endif
-
-                                <label class="fw-semibold mb-1">Jumlah:</label>
-                                <input type="number" class="form-control mb-3 w-50" value="1" min="1" id="qty{{ $pr->id }}">
-
-                                <a href="#"
-                                   class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
-                                   data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
-                                   data-store-name="{{ $pr->store->name ?? '' }}"
-                                   data-store-address="{{ $pr->store->alamat ?? '' }}"
-                                   onclick="sendWA({{ $pr->id }})">
-                                    <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
-                                </a>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Produk Lainnya -->
                         <div class="p-4 border-top">
-                            <h6 class="related-title mb-3">Produk Lainnya</h6>
+                            <h6 class="fw-semibold mb-3">Produk Lainnya</h6>
                             <div class="related-wrapper">
                                 @foreach($allProducts as $other)
                                     @if($other->id != $pr->id)
@@ -168,6 +251,7 @@
     </div>
 </div>
 @endsection
+
 @section('scripts')
 <script>
 const allProducts = @json($allProductsJs);
@@ -182,8 +266,8 @@ document.querySelectorAll('.related-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const current = btn.dataset.current;
         const target = btn.dataset.target;
-        updateClickCount(target); // ✅ Tambah jumlah dilihat untuk produk tujuan
-        switchModal(current, target); // Tetap buka modal seperti biasa
+        updateClickCount(target);
+        switchModal(current, target);
     });
 });
 
@@ -205,87 +289,55 @@ function updateClickCount(id){
     });
 }
 
-// Filter & urutan produk sesuai kategori
+// Filter kategori
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        // Ganti tombol aktif
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
         const category = btn.dataset.category.toLowerCase();
         const container = document.getElementById('productGrid');
         const cards = Array.from(container.querySelectorAll('.product-card'));
-
         let visibleCards = [];
 
         if (category === 'unggulan') {
-            // ✅ Unggulan: 10 produk dengan click tertinggi (terbanyak dilihat di atas)
-            // Urutan: Click Terbanyak -> Terendah
-            visibleCards = [...cards]
-                .sort((a, b) => parseInt(b.dataset.click) - parseInt(a.dataset.click))
-                .slice(0, 10);
-        } 
-        else if (category === 'terbaru') {
-            // ✅ Terbaru: 10 produk terbaru (id terbesar di atas)
-            // Urutan: ID Terbesar (Terbaru) -> Terkecil (Lama)
-            visibleCards = [...cards]
-                .sort((a, b) => parseInt(b.dataset.id) - parseInt(a.dataset.id))
-                .slice(0, 10);
-        } 
-        else if (category === 'all' || category === 'semua') {
-            // ✅ Semua: tampilkan semua produk, urut dari terbaru ke lama
-            // Urutan: ID Terbesar (Terbaru) -> Terkecil (Lama)
-            visibleCards = [...cards]
-                .sort((a, b) => parseInt(b.dataset.id) - parseInt(a.dataset.id));
-        } 
-        else {
-            // ✅ Kategori lain (misal fashion, makanan, dll)
-            // Urutan: ID Terbesar (Terbaru) -> Terkecil (Lama)
-            visibleCards = cards.filter(c =>
-                c.dataset.category.toLowerCase().includes(category)
-            ).sort((a, b) => parseInt(b.dataset.id) - parseInt(a.dataset.id));
+            visibleCards = [...cards].sort((a,b)=>parseInt(b.dataset.click)-parseInt(a.dataset.click)).slice(0,10);
+        } else if (category === 'terbaru') {
+            visibleCards = [...cards].sort((a,b)=>parseInt(b.dataset.id)-parseInt(a.dataset.id)).slice(0,10);
+        } else if (category === 'all' || category === 'semua') {
+            visibleCards = [...cards].sort((a,b)=>parseInt(b.dataset.id)-parseInt(a.dataset.id));
+        } else {
+            visibleCards = cards.filter(c=>c.dataset.category.toLowerCase().includes(category))
+                .sort((a,b)=>parseInt(b.dataset.id)-parseInt(a.dataset.id));
         }
 
-        // Sembunyikan semua kartu dulu
-        cards.forEach(card => card.style.display = 'none');
-        
-        // Tampilkan hasil filter dan atur ulang posisinya di DOM
-        // Ini memastikan urutan tampilan sesuai dengan array visibleCards
+        cards.forEach(card => card.style.display='none');
         visibleCards.forEach(c => {
-            c.style.display = 'flex';
-            container.appendChild(c); 
+            c.style.display='flex';
+            container.appendChild(c);
         });
     });
 });
 
-
-// Format Rupiah
-function formatRupiah(angka) {
-// ... (fungsi tetap sama)
+function formatRupiah(angka){
     return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-// Variant warna
 document.querySelectorAll('.color-btn').forEach(btn => {
-// ... (fungsi tetap sama)
-    btn.addEventListener('click', function () {
+    btn.addEventListener('click', function(){
         const id = this.dataset.product;
         const color = this.dataset.color;
         const img = this.dataset.img;
         const price = this.dataset.price;
-
         document.getElementById(`mainImg${id}`).src = img;
         document.getElementById(`price${id}`).innerText = formatRupiah(price);
-
         document.querySelectorAll(`#productModal${id} .color-btn`).forEach(b => b.classList.remove('active'));
         this.classList.add('active');
-
         const product = allProducts.find(p => p.id == id);
         const variant = product.variants.find(v => v.color === color);
         const sizesDiv = document.getElementById(`sizes${id}`);
         if (!sizesDiv) return;
         sizesDiv.innerHTML = '';
-
         if (variant.sizes && variant.sizes.length > 0) {
             variant.sizes.forEach(s => {
                 const btn = document.createElement("button");
@@ -304,41 +356,35 @@ document.querySelectorAll('.color-btn').forEach(btn => {
     });
 });
 
-function selectSize(id, size) {
-// ... (fungsi tetap sama)
-    const sizesDiv = document.getElementById('sizes' + id);
+function selectSize(id, size){
+    const sizesDiv = document.getElementById('sizes'+id);
     sizesDiv.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));
     const btn = Array.from(sizesDiv.querySelectorAll('.size-option')).find(b => b.innerText === size);
     if (btn) btn.classList.add('active');
 }
 
-function switchModal(currentId, targetId) {
-// ... (fungsi tetap sama)
+function switchModal(currentId, targetId){
     const current = document.getElementById(`productModal${currentId}`);
     const target = document.getElementById(`productModal${targetId}`);
     bootstrap.Modal.getInstance(current).hide();
     new bootstrap.Modal(target).show();
 }
 
-function sendWA(productId) {
-// ... (fungsi tetap sama)
+function sendWA(productId){
     const pr = allProducts.find(p => p.id == productId);
     if (!pr) return;
     const qty = document.getElementById(`qty${productId}`).value || 1;
     const selectedColor = document.querySelector(`#productModal${productId} .color-btn.active`)?.innerText || '';
     const selectedSize = document.querySelector(`#sizes${productId} .size-option.active`)?.innerText || '';
-
     const waBtn = document.querySelector(`#productModal${productId} .btn-wa`);
     const waNumber = waBtn.dataset.wa;
     const storeName = waBtn.dataset.storeName || (pr.store?.name || '');
     const storeAddress = waBtn.dataset.storeAddress || (pr.store?.alamat || '');
-
     const message = `Halo Admin, saya ingin memesan:
 Produk: ${pr.name}
 Toko: ${storeName}
 Alamat: ${storeAddress}
 ${selectedColor ? `Warna: ${selectedColor}\n` : ''}${selectedSize ? `Ukuran: ${selectedSize}\n` : ''}Jumlah: ${qty}`;
-
     window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, '_blank');
 }
 </script>

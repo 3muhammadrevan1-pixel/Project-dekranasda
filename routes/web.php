@@ -43,6 +43,9 @@ Route::get('/galeri', [GaleriController::class, 'index'])->name('galeri.index');
 // Event
 Route::get('/event', [EventController::class, 'index'])->name('events.index');
 
+// RUTE GENERIK UNTUK SEMUA MENU BARU (Tambahkan ini)
+Route::get('/halaman/{slug}', [StatisPageController::class, 'dynamicPage'])->name('page.dynamic');
+
 // Tentang Kami / About
 Route::prefix('about')->group(function () {
     Route::get('/sejarah', [StatisPageController::class, 'sejarah'])->name('about.sejarah');

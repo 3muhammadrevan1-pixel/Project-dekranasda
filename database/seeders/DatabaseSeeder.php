@@ -16,11 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             // Seeder yang bergantung pada MenuSeeder
-            TbMenuSeeder::class, 
-            GallerySeeder::class,
-            NewsSeeder::class,
-            EventSeeder::class,
-            OrganisasiSeeder::class,
+            MenuSeeder::class,
         
             // Seeder lain yang bersifat independen
             StoreSeeder::class,

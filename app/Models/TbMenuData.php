@@ -13,24 +13,25 @@ class TbMenuData extends Model
 
     protected $table = 'tb_menu_data';
 
-    // WAJIB: Definisikan daftar jenis konten untuk validasi dan form admin
+    // WAJIB: Definisikan daftar jenis konten BARU yang akan digunakan oleh TbMenu
     const JENIS_KONTEN = [
-        'berita'     => 'Berita/News',
-        'event'      => 'Acara/Event',
-        'galeri'     => 'Galeri Foto',
-        'organisasi' => 'Struktur Organisasi',
-        // Tambahkan jenis konten lain di sini jika ada!
+        'statis'            => 'Halaman Statis',                    // Konten tunggal (misal: Tentang Kami, Kontak)
+        'dinamis'           => 'Konten Dinamis (Detail / Link)',    // GABUNGAN: Tampilan ditentukan oleh kolom 'link'
+        'media'             => 'Media Foto',                        // Hanya menginput Foto
+        'organisasi'        => 'Struktur',                          // Konten khusus (Struktur)
     ];
 
     protected $fillable = [
         'menu_id',
-        'jenis_konten',
+        'jenis_konten', // <-- Nilai ini akan diisi otomatis dari TbMenu
         'title',
         'content', 
         'img',
         'date',
         'location',
-        'link',
+        'link',         // Kolom ini yang akan menentukan tampilan dinamis
+        // Catatan: Data organisasi ('jabatan', 'deskripsi_organisasi') 
+        // harus disimpan sebagai JSON di kolom 'content'.
     ];
 
     protected $casts = [
@@ -60,14 +61,17 @@ class TbMenuData extends Model
             // Dekode JSON string dari kolom 'content'
             $data = json_decode($this->content, true); 
             
-            // Jika berhasil didekode dan hasilnya adalah array/objek, ambil elemen pertama
-            if (is_array($data) && json_last_error() === JSON_ERROR_NONE) {
-                // Mengembalikan elemen array pertama atau array default jika kosong
+            // Cek apakah hasil decode adalah array/objek yang valid dan tidak kosong
+            if (is_array($data) && json_last_error() === JSON_ERROR_NONE && !empty($data)) {
+                // Asumsi data organisasi disimpan sebagai array di kolom 'content', 
+                // kita ambil elemen pertama jika ada.
                 return $data[0] ?? ['jabatan' => null, 'deskripsi' => null];
             }
         }
         
-        // Return array default yang aman jika bukan organisasi atau decode gagal
+        // Return array default yang aman:
+        // - 'jabatan' selalu null kecuali jika organisasi
+        // - 'deskripsi' mengambil nilai langsung dari 'content' untuk non-organisasi
         return ['jabatan' => null, 'deskripsi' => $this->content]; 
     }
 }

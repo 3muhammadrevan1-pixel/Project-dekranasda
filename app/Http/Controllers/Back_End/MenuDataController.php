@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Back_End;
 
-use App\Http\Controllers\Controller; 
+use App\Http\Controllers\Controller;
 use App\Models\TbMenuData;
 use App\Models\TbMenu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule; 
+use Illuminate\Validation\Rule;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\File; 
+use Illuminate\Support\Str;
 
 class MenuDataController extends Controller
 {
@@ -17,40 +20,66 @@ class MenuDataController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil semua menu untuk opsi filter di view
         $menus = TbMenu::all();
-        
-        // Mulai query dengan eager loading relasi 'menu'
         $query = TbMenuData::with('menu');
 
-        // Cek apakah ada filter menu_id dari request (URL)
         $selectedMenuId = $request->input('menu_id');
         if ($selectedMenuId) {
             $query->where('menu_id', $selectedMenuId);
         }
 
-        // Ambil data yang sudah difilter, diurutkan berdasarkan ID terlama (ASC)
         $menu_data = $query
             ->orderBy('id', 'asc')
-            ->paginate(10) // Menerapkan pagination: 10 data per halaman
-            ->appends($request->query()); // Mempertahankan parameter filter saat navigasi
+            ->paginate(10)
+            ->appends($request->query());
 
-        // Kirim ke view, termasuk daftar menu untuk filter dan ID menu yang dipilih
         return view('admin.menu_data.index', compact('menu_data', 'menus', 'selectedMenuId'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        // Ambil semua menu untuk pilihan dropdown
         $menus = TbMenu::all();
-        
-        // Kirim opsi jenis konten ke view (Diasumsikan TbMenuData::JENIS_KONTEN ada di Model)
-        $jenisKontenOptions = TbMenuData::JENIS_KONTEN; 
+        $selectedMenu = null;
+        if ($request->has('menu_id')) {
+            $selectedMenu = TbMenu::find($request->menu_id);
+        }
 
-        return view('admin.menu_data.create', compact('menus', 'jenisKontenOptions'));
+        return view('admin.menu_data.create', compact('menus', 'selectedMenu'));
+    }
+
+    /**
+     * Fungsi helper untuk mengelola upload file gambar.
+     * Sekarang menyimpan file ke storage/app/public/uploads/menu_data/{jenis_konten}/
+     */
+    protected function handleImageUpload(Request $request, string $contentType, ?string $oldImagePath = null)
+    {
+        if ($request->hasFile('img')) {
+            $file = $request->file('img');
+
+            // 1. Tentukan folder target di dalam storage
+            $targetFolder = 'uploads/menu_data/' . $contentType;
+
+            // 2. Tentukan nama file (timestamp + slug nama asli)
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $extension = $file->extension();
+            $filename = time() . '-' . Str::limit(Str::slug($originalName), 50, '') . '.' . $extension;
+
+            // 3. Hapus gambar lama jika ada
+            if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
+                Storage::disk('public')->delete($oldImagePath);
+            }
+
+            // 4. Simpan file ke storage/app/public/uploads/menu_data/{jenis_konten}
+            $path = $file->storeAs($targetFolder, $filename, 'public');
+
+            // 5. Kembalikan path relatif untuk disimpan di database
+            return $path;
+        }
+
+        return null;
     }
 
     /**
@@ -58,92 +87,76 @@ class MenuDataController extends Controller
      */
     public function store(Request $request)
     {
-        // Ambil kunci jenis konten yang valid dari Model
-        $validJenisKonten = array_keys(TbMenuData::JENIS_KONTEN);
+        $request->validate(['menu_id' => 'required|exists:tb_menu,id']);
 
-        // --- ATURAN VALIDASI DASAR ---
+        try {
+            $parentMenu = TbMenu::findOrFail($request->menu_id);
+            $contentType = $parentMenu->jenis_konten;
+        } catch (ModelNotFoundException $e) {
+            return redirect()->back()->withInput()->withErrors(['menu_id' => 'Menu induk tidak ditemukan.']);
+        }
+
         $rules = [
-            'menu_id' => 'required|exists:tb_menu,id',
-            'title' => 'nullable|string|max:255', 
-            'content' => 'nullable|string', 
+            'title' => 'nullable|string|max:255',
+            'content' => 'nullable|string',
             'date' => 'nullable|date',
             'location' => 'nullable|string|max:255',
-            'link' => 'nullable|url|max:255',
-            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
-            
-            // VALIDASI JENIS KONTEN: Dibuat required dan harus ada di daftar valid
-            'jenis_konten' => [
-                'required', 
-                'string', 
-                'max:50', 
-                Rule::in($validJenisKonten) 
-            ],
-            
-            // Field tambahan untuk organisasi, awalnya nullable
+            // Kolom link sekarang selalu nullable, yang menentukan adalah inputan di form (bukan rule required)
+            'link' => 'nullable|url|max:255', 
+            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2000',
             'jabatan' => 'nullable|string|max:255',
             'deskripsi_organisasi' => 'nullable|string',
         ];
-        
-        // --- LOGIKA VALIDASI DINAMIS ---
-        if ($request->jenis_konten === 'galeri') {
-             // Galeri: Hanya butuh img
-             $rules['img'] = 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048';
-        } elseif ($request->jenis_konten === 'berita') {
-            // Berita: title, content
+
+        // --- Perubahan utama ada di blok ini ---
+        if ($contentType === 'dinamis') {
+            // Konten dinamis (Detail atau Link) minimal wajib punya judul dan isi.
             $rules['title'] = 'required|string|max:255';
             $rules['content'] = 'required|string';
-        } elseif ($request->jenis_konten === 'event') {
-            // Event: title, content, link
-            $rules['title'] = 'required|string|max:255';
-            $rules['content'] = 'required|string';
-            $rules['link'] = 'required|url|max:255';
-        } elseif ($request->jenis_konten === 'organisasi') {
-            // Organisasi: title, jabatan, deskripsi_organisasi
+            // Link akan divalidasi sebagai URL jika diisi. Jika link kosong, dianggap konten detail.
+            // Tidak perlu rule khusus untuk link di sini, sudah dicover oleh general rules.
+
+        } elseif ($contentType === 'media') {
+            $rules['img'] = 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2000';
+            
+        } elseif ($contentType === 'organisasi') {
             $rules['title'] = 'required|string|max:255';
             $rules['jabatan'] = 'required|string|max:255';
             $rules['deskripsi_organisasi'] = 'required|string';
+            
+        } elseif ($contentType === 'statis') {
+            $rules['title'] = 'required|string|max:255';
+            $rules['content'] = 'required|string';
         }
+        // --- Akhir perubahan utama ---
 
         $request->validate($rules);
 
-        // Ambil semua data kecuali field custom (jabatan, deskripsi_organisasi) dan img
         $data = $request->except(['img', 'jabatan', 'deskripsi_organisasi']);
-        
-        // --- LOGIKA PENYIMPANAN DATA KHUSUS ORGANISASI ---
-        if ($request->jenis_konten === 'organisasi') {
-            // Gabungkan jabatan dan deskripsi ke dalam array JSON
-            $organisasiData = [
-                [
-                    'jabatan' => $request->jabatan,
-                    'deskripsi' => $request->deskripsi_organisasi,
-                ]
-            ];
-            // Simpan sebagai JSON string ke kolom 'content'
+        $data['menu_id'] = $parentMenu->id;
+        $data['jenis_konten'] = $contentType;
+
+        // Penanganan Data Khusus
+        if ($contentType === 'organisasi') {
+            $organisasiData = [[
+                'jabatan' => $request->jabatan,
+                'deskripsi' => $request->deskripsi_organisasi,
+            ]];
             $data['content'] = json_encode($organisasiData);
-            
-            // Pastikan field lain yang tidak relevan di-set null
             $data['date'] = null;
             $data['location'] = null;
             $data['link'] = null;
-            
-        } elseif ($request->jenis_konten === 'galeri') {
-            // Galeri: pastikan semua field teks di-null-kan
-            $data['title'] = null;
-            $data['content'] = null;
+            $data['title'] = $request->title;
+        } elseif ($contentType === 'media') {
+            $data['title'] = $request->title ?? null;
+            $data['content'] = $request->content ?? null;
             $data['date'] = null;
             $data['location'] = null;
             $data['link'] = null;
         }
 
-        // --- LOGIKA UPLOAD GAMBAR ---
-        if ($request->hasFile('img')) {
-            // Simpan gambar ke storage public/menu_data_images
-            $path = $request->file('img')->store('menu_data_images', 'public');
-            $data['img'] = $path;
-        } else {
-             // Pastikan null jika tidak ada file yang diupload (kecuali jika jenis konten mengharuskan gambar)
-             $data['img'] = null; 
-        }
+        $imagePath = $this->handleImageUpload($request, $contentType);
+        $data['img'] = $imagePath;
 
         TbMenuData::create($data);
 
@@ -155,8 +168,7 @@ class MenuDataController extends Controller
      */
     public function show(TbMenuData $menu_data)
     {
-        // Eager load relasi menu sebelum ditampilkan
-        $menu_data->load('menu'); 
+        $menu_data->load('menu');
         return view('admin.menu_data.show', compact('menu_data'));
     }
 
@@ -166,11 +178,9 @@ class MenuDataController extends Controller
     public function edit(TbMenuData $menu_data)
     {
         $menus = TbMenu::all();
-        
-        // Kirim opsi jenis konten ke view (Diasumsikan TbMenuData::JENIS_KONTEN ada di Model)
-        $jenisKontenOptions = TbMenuData::JENIS_KONTEN; 
+        $contentType = $menu_data->jenis_konten;
 
-        return view('admin.menu_data.edit', compact('menu_data', 'menus', 'jenisKontenOptions'));
+        return view('admin.menu_data.edit', compact('menu_data', 'menus', 'contentType'));
     }
 
     /**
@@ -178,112 +188,93 @@ class MenuDataController extends Controller
      */
     public function update(Request $request, TbMenuData $menu_data)
     {
-        // Ambil kunci jenis konten yang valid dari Model
-        $validJenisKonten = array_keys(TbMenuData::JENIS_KONTEN);
-        
-        // --- ATURAN VALIDASI DASAR ---
+        $request->validate(['menu_id' => 'required|exists:tb_menu,id']);
+
+        try {
+            $parentMenu = TbMenu::findOrFail($request->menu_id);
+            $contentType = $parentMenu->jenis_konten;
+        } catch (ModelNotFoundException $e) {
+            return redirect()->back()->withInput()->withErrors(['menu_id' => 'Menu induk tidak ditemukan.']);
+        }
+
         $rules = [
-            'menu_id' => 'required|exists:tb_menu,id',
             'title' => 'nullable|string|max:255',
-            'content' => 'nullable|string', 
+            'content' => 'nullable|string',
             'date' => 'nullable|date',
             'location' => 'nullable|string|max:255',
             'link' => 'nullable|url|max:255',
-            // Gunakan nullable agar bisa mempertahankan gambar lama jika tidak ada upload baru
-            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
-            
-            // VALIDASI JENIS KONTEN: Dibuat required dan harus ada di daftar valid
-            'jenis_konten' => [
-                'required', 
-                'string', 
-                'max:50', 
-                Rule::in($validJenisKonten)
-            ],
-            
-            // Field tambahan untuk organisasi, awalnya nullable
+            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2000',
             'jabatan' => 'nullable|string|max:255',
             'deskripsi_organisasi' => 'nullable|string',
         ];
-        
-        // --- LOGIKA VALIDASI DINAMIS (MIRROR DARI STORE) ---
-        if ($request->jenis_konten === 'galeri') {
-            // Galeri: Butuh img baru jika img lama tidak ada
+
+        // --- Perubahan utama ada di blok ini ---
+        if ($contentType === 'dinamis') {
+            // Konten dinamis (Detail atau Link) minimal wajib punya judul dan isi.
+            $rules['title'] = 'required|string|max:255';
+            $rules['content'] = 'required|string';
+            // Link akan divalidasi sebagai URL jika diisi. Jika link kosong, dianggap konten detail.
+            
+        } elseif ($contentType === 'media') {
             $rules['img'] = [
-                'nullable', 
-                'image', 
-                'mimes:jpeg,png,jpg,gif,svg', 
-                'max:2048',
-                Rule::requiredIf(function() use ($menu_data, $request) {
-                    // Wajib ada file baru jika jenis konten adalah galeri dan record tidak memiliki gambar lama
-                    return $menu_data->jenis_konten === 'galeri' && !$menu_data->img && !$request->hasFile('img');
+                'nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2000',
+                // Wajib ada gambar baru jika gambar lama tidak ada
+                Rule::requiredIf(function () use ($menu_data, $request) {
+                    return !$menu_data->img && !$request->hasFile('img');
                 })
             ];
-        } elseif ($request->jenis_konten === 'berita') {
-            // Berita: title, content
-            $rules['title'] = 'required|string|max:255';
-            $rules['content'] = 'required|string';
-        } elseif ($request->jenis_konten === 'event') {
-            // Event: title, content, link
-            $rules['title'] = 'required|string|max:255';
-            $rules['content'] = 'required|string';
-            $rules['link'] = 'required|url|max:255';
-        } elseif ($request->jenis_konten === 'organisasi') {
-            // Organisasi: title, jabatan, deskripsi_organisasi
+            
+        } elseif ($contentType === 'organisasi') {
             $rules['title'] = 'required|string|max:255';
             $rules['jabatan'] = 'required|string|max:255';
             $rules['deskripsi_organisasi'] = 'required|string';
+            
+        } elseif ($contentType === 'statis') {
+            $rules['title'] = 'required|string|max:255';
+            $rules['content'] = 'required|string';
         }
+        // --- Akhir perubahan utama ---
 
         $request->validate($rules);
 
-        // Ambil semua data kecuali field custom (jabatan, deskripsi_organisasi) dan img
         $data = $request->except(['_token', '_method', 'img', 'jabatan', 'deskripsi_organisasi']);
+        $data['menu_id'] = $parentMenu->id;
+        $data['jenis_konten'] = $contentType;
 
-        // --- LOGIKA PENYIMPANAN DATA KHUSUS ORGANISASI (MIRROR DARI STORE) ---
-        if ($request->jenis_konten === 'organisasi') {
-            // Gabungkan jabatan dan deskripsi ke dalam array JSON
-            $organisasiData = [
-                [
-                    'jabatan' => $request->jabatan,
-                    'deskripsi' => $request->deskripsi_organisasi,
-                ]
-            ];
-            // Simpan sebagai JSON string ke kolom 'content'
+        // Penanganan Data Khusus
+        if ($contentType === 'organisasi') {
+            $organisasiData = [[
+                'jabatan' => $request->jabatan,
+                'deskripsi' => $request->deskripsi_organisasi,
+            ]];
             $data['content'] = json_encode($organisasiData);
-            
-            // Pastikan field lain yang tidak relevan di-set null
             $data['date'] = null;
             $data['location'] = null;
             $data['link'] = null;
-            
-        } elseif ($request->jenis_konten === 'galeri') {
-            // Galeri: pastikan semua field teks di-null-kan
-            $data['title'] = null;
-            $data['content'] = null;
+            $data['title'] = $request->title;
+        } elseif ($contentType === 'media') {
+            $data['title'] = $request->title ?? null;
+            $data['content'] = $request->content ?? null;
             $data['date'] = null;
             $data['location'] = null;
             $data['link'] = null;
         }
 
-        // --- LOGIKA UPLOAD GAMBAR ---
-        if ($request->hasFile('img')) {
-            // 1. Hapus gambar lama jika ada
-            if ($menu_data->img && Storage::disk('public')->exists($menu_data->img)) {
-                Storage::disk('public')->delete($menu_data->img);
-            }
-            // 2. Simpan gambar baru
-            $path = $request->file('img')->store('menu_data_images', 'public');
-            $data['img'] = $path;
+        $imagePath = $this->handleImageUpload($request, $contentType, $menu_data->img);
+
+        if ($imagePath) {
+            $data['img'] = $imagePath;
+        } else {
+            // Jika tidak ada upload baru, pertahankan yang lama, kecuali untuk organisasi/media yang mungkin tidak perlu gambar
+            $data['img'] = $menu_data->img;
         }
-        // Jika tidak ada upload baru:
-        else {
-             // Jika jenis konten yang baru tidak membutuhkan gambar (non-berita/event/organisasi/galeri), hapus gambar lama
-             if ($menu_data->img && !in_array($request->jenis_konten, array_keys(TbMenuData::JENIS_KONTEN))) {
-                 Storage::disk('public')->delete($menu_data->img);
-                 $data['img'] = null;
-             }
-             // Jika jenis konten tetap membutuhkan gambar, kolom 'img' tidak perlu diubah di $data (akan menggunakan nilai lama dari $menu_data)
+        
+        // Hapus image jika user memilih untuk menghapus atau jenis konten tidak membutuhkan gambar
+        if ($request->filled('delete_img') && $menu_data->img && Storage::disk('public')->exists($menu_data->img)) {
+             Storage::disk('public')->delete($menu_data->img);
+             $data['img'] = null;
         }
+
 
         $menu_data->update($data);
 
@@ -295,7 +286,6 @@ class MenuDataController extends Controller
      */
     public function destroy(TbMenuData $menu_data)
     {
-        // Hapus gambar dari storage sebelum menghapus record database
         if ($menu_data->img && Storage::disk('public')->exists($menu_data->img)) {
             Storage::disk('public')->delete($menu_data->img);
         }

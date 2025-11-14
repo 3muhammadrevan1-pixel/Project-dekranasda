@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Back_End;
 
 use App\Http\Controllers\Controller; 
 use App\Models\TbMenu;
+use App\Models\TbMenuData;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -14,25 +15,25 @@ class MenuController extends Controller
      */
     public function index()
     {
-        // Tampilkan menu beserta parent-nya, urut berdasarkan ID terlama (ASC).
-        // Ini memastikan data yang paling lama dibuat muncul di atas.
         $menus = TbMenu::with('parent')
-            ->orderBy('id', 'asc') // DISESUAIKAN: Mengurutkan berdasarkan ID terlama
-            ->paginate(5); 
+            ->orderBy('id', 'asc')
+            ->paginate(5);
 
         return view('admin.menu.index', compact('menus'));
     }
+
     /**
      * Form tambah menu.
      */
     public function create()
     {
-        // Mengambil SEMUA menu top-level (parent_id = 0) untuk dijadikan opsi menu induk.
         $parentMenus = TbMenu::where('parent_id', 0)
             ->orderBy('urutan')
             ->get();
 
-        return view('admin.menu.create', compact('parentMenus'));
+        $jenisKontenOptions = TbMenuData::JENIS_KONTEN;
+
+        return view('admin.menu.create', compact('parentMenus', 'jenisKontenOptions'));
     }
 
     /**
@@ -40,7 +41,8 @@ class MenuController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input
+        $validJenisKonten = array_keys(TbMenuData::JENIS_KONTEN);
+
         $request->validate([
             'nama' => 'required|string|max:100',
             'parent_id' => 'required|integer|min:0',
@@ -48,16 +50,21 @@ class MenuController extends Controller
                 'required',
                 'integer',
                 'min:1',
-                // Validasi urutan unik per parent
                 Rule::unique('tb_menu')->where(function ($query) use ($request) {
                     return $query->where('parent_id', $request->parent_id);
                 }),
             ],
-            'tipe' => 'required|in:statis,dinamis',
+            'jenis_konten' => [
+                'required',
+                'string',
+                Rule::in($validJenisKonten)
+            ],
             'status' => 'required|in:aktif,nonaktif',
         ], [
             'urutan.unique' => 'Nomor urutan sudah digunakan dalam menu induk yang sama.',
             'urutan.required' => 'Kolom urutan wajib diisi.',
+            'jenis_konten.required' => 'Kolom Jenis Konten wajib diisi.',
+            'jenis_konten.in' => 'Jenis konten yang dipilih tidak valid.',
         ]);
 
         TbMenu::create($request->all());
@@ -100,20 +107,24 @@ class MenuController extends Controller
                 'required',
                 'integer',
                 'min:1',
-                // Validasi unik tapi abaikan id dirinya sendiri
                 Rule::unique('tb_menu')->where(function ($query) use ($request, $menu) {
                     return $query->where('parent_id', $request->parent_id)
                                  ->where('id', '!=', $menu->id);
                 }),
             ],
-            'tipe' => 'required|in:statis,dinamis',
             'status' => 'required|in:aktif,nonaktif',
         ], [
             'urutan.unique' => 'Nomor urutan sudah digunakan dalam menu induk yang sama.',
             'urutan.required' => 'Kolom urutan wajib diisi.',
         ]);
 
-        $menu->update($request->all());
+        // Hanya update field yang boleh diubah
+        $menu->update([
+            'nama'      => $request->nama,
+            'parent_id' => $request->parent_id,
+            'urutan'    => $request->urutan,
+            'status'    => $request->status,
+        ]);
 
         return redirect()->route('admin.menu.index')
             ->with('success', 'Menu berhasil diperbarui.');

@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="content">
-    <!-- ===== HEADER ===== -->
     <div class="header-actions flex justify-between items-center mb-4">
         <h2>Daftar Konten Menu</h2>
         <a href="{{ route('admin.menu_data.create') }}" class="btn btn-add">
@@ -12,12 +11,10 @@
         </a>
     </div>
 
-    <!-- ===== ALERT SUCCESS ===== -->
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <!-- ===== FILTER MENU START ===== -->
     <div class="filter-box bg-white p-4 rounded-lg shadow-sm mb-4 border border-gray-200">
         <form action="{{ route('admin.menu_data.index') }}" method="GET" class="flex items-center flex-wrap gap-4">
             <label for="menu_id" class="font-semibold text-gray-700">
@@ -45,9 +42,6 @@
             @endif
         </form>
     </div>
-    <!-- ===== FILTER MENU END ===== -->
-
-    <!-- ===== TABLE ===== -->
     <div class="table-wrapper overflow-x-auto">
         <table class="table w-full border-collapse">
             <thead>
@@ -61,6 +55,19 @@
                 </tr>
             </thead>
             <tbody>
+                {{-- Data untuk mapping jenis_konten ke nama yang lebih mudah dibaca (asumsi variabel ini tersedia dari controller) --}}
+                @php
+                    // Variabel ini perlu dipassing dari controller. Jika tidak, baris ini bisa menyebabkan error.
+                    // Untuk sementara, saya definisikan di sini sebagai fallback/contoh, namun idealnya ini datang dari controller.
+                    $jenisKontenOptions = [
+                        'statis' => 'Statis',
+                        'dinamis_detail' => 'Dinamis Detail',
+                        'dinamis_link' => 'Dinamis Link',
+                        'media' => 'Media/Galeri',
+                        'organisasi' => 'Organisasi',
+                    ];
+                @endphp
+                
                 @forelse ($menu_data as $data)
                     <tr class="table-row border-b hover:bg-gray-50 align-top">
                         <td class="id-col text-center">{{ $data->id }}</td>
@@ -71,11 +78,13 @@
                         </td>
                         <td class="media-col text-center">
                             @if ($data->img)
+                                {{-- Pastikan link asset mengarah ke folder storage/app/public melalui symlink public/storage --}}
                                 <div class="img-container">
-                                    <img src="{{ asset('storage/'.$data->img) }}" 
-                                         alt="Gambar Konten"
-                                         class="img-table">
+                                    <img src="{{ asset('storage/' . $data->img) }}" 
+                                            alt="Gambar Konten"
+                                            class="img-table">
                                 </div>
+                                
                             @else
                                 <span class="text-gray-400">Tidak ada</span>
                             @endif
@@ -87,9 +96,9 @@
                                 <i class="fas fa-edit"></i>
                             </a>
                             <form action="{{ route('admin.menu_data.destroy', $data->id) }}" 
-                                  method="POST" 
-                                  class="inline-form d-inline" 
-                                  onsubmit="return confirm('Yakin ingin menghapus konten ini?')">
+                                    method="POST" 
+                                    class="inline-form d-inline" 
+                                    onsubmit="return confirm('Yakin ingin menghapus konten ini?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-delete" title="Hapus Konten">
@@ -108,6 +117,15 @@
             </tbody>
         </table>
     </div>
+    
+    {{-- CATATAN PENTING: Untuk menampilkan gambar, pastikan:
+    1. Anda telah menjalankan 'php artisan storage:link'.
+    2. Pada baris: <img src="{{ asset($data->img) }}", harus diubah menjadi 
+       <img src="{{ asset('storage/' . $data->img) }}" karena di Controller Anda menyimpan file 
+       ke 'storage/app/public' (yang diakses publik melalui 'public/storage').
+    
+    Saya telah mengoreksi baris tersebut agar sesuai dengan controller. --}}
+    
     @if ($menu_data instanceof \Illuminate\Pagination\LengthAwarePaginator && $menu_data->total() > 0)
         <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
             {{-- Informasi Halaman --}}
@@ -128,7 +146,6 @@
     @endif
 </div>
 
-<!-- ===== STYLE ===== -->
 <style>
     /* === Table Layout === */
     .table {

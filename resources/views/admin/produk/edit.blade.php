@@ -73,11 +73,10 @@
 
             {{-- Kategori --}}
             <div class="form-group mb-4">
-                <label for="category" class="block font-medium text-gray-700">Kategori <span class="text-red-500">*</span></label>
+                <label for="category" class="block font-medium text-gray-700">Kategori</label>
                 <select 
                     id="category" 
-                    name="category" 
-                    required
+                    name="category"
                     class="form-control w-full border rounded p-2 @error('category') border-red-500 @enderror"
                 >
                     <option value="">-- Pilih Kategori --</option>
@@ -92,28 +91,29 @@
 
             {{-- Deskripsi --}}
             <div class="form-group mb-4">
-                <label for="description" class="block font-medium text-gray-700">Deskripsi</label>
+                <label for="desc" class="block font-medium text-gray-700">Deskripsi</label>
                 <textarea 
-                    id="description" 
-                    name="description" 
+                    id="desc" 
+                    name="desc" 
                     rows="4" 
-                    class="form-control w-full border rounded p-2 @error('description') border-red-500 @enderror" 
+                    class="form-control w-full border rounded p-2 @error('desc') border-red-500 @enderror" 
                     placeholder="Masukkan deskripsi produk"
-                >{{ old('description', $product->desc) }}</textarea>
-                @error('description') 
+                >{{ old('desc', $product->desc) }}</textarea>
+                @error('desc') 
                     <span class="text-red-500 text-sm">{{ $message }}</span> 
                 @enderror
             </div>
 
             {{-- Harga --}}
             <div class="form-group mb-4">
-                <label for="price" class="block font-medium text-gray-700">Harga</label>
+                <label for="price" class="block font-medium text-gray-700">Harga <span class="text-red-500">*</span></label>
                 <input 
                     type="number" 
                     id="price" 
                     name="price" 
                     step="0.01" 
                     value="{{ old('price', $product->price) }}" 
+                    required
                     class="form-control w-full border rounded p-2 @error('price') border-red-500 @enderror" 
                     placeholder="Masukkan harga produk"
                 >
@@ -143,6 +143,7 @@
                     name="img" 
                     class="form-control file-input w-full border rounded p-2 @error('img') border-red-500 @enderror"
                 >
+                <small class="text-gray-500 text-sm">Ukuran maksimal 2MB </small>
                 @error('img') 
                     <span class="text-red-500 text-sm">{{ $message }}</span> 
                 @enderror
@@ -161,4 +162,21 @@
         </form>
     </div>
 </div>
+
+{{-- Validasi Ukuran Gambar --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const imgInput = document.getElementById('img');
+
+    if (imgInput) {
+        imgInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file && file.size > 2 * 1024 * 1024) { // Maksimum 2MB
+                alert('Ukuran gambar melebihi 2MB! Silakan pilih gambar yang lebih kecil.');
+                this.value = ''; // Reset input file
+            }
+        });
+    }
+});
+</script>
 @endsection
