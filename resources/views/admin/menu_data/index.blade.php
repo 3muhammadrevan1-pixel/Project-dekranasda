@@ -51,7 +51,7 @@
                     <th class="text-left">Judul</th>
                     <th class="text-center">Jenis</th>
                     <th class="media-col">Gambar</th>
-                    <th style="text-align:center;">Aksi</th>
+                     <th style="width:100px; text-align:center;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -164,7 +164,10 @@
 
     /* === Column Width === */
     .id-col { width: 40px; text-align: center; }
-    .media-col { width: 90px; text-align: center; }
+    .media-col { 
+    width: 200px; /* Diperlebar dari 90px menjadi 120px */
+    text-align: center; 
+}
 
     /* === Header === */
     .table th {
