@@ -139,7 +139,6 @@
                 </div>
             </div>
 
-            <!-- Modal Produk -->
             <div class="modal fade" id="productModal{{ $pr->id }}" tabindex="-1">
                 <div class="modal-dialog modal-xl modal-dialog-centered">
                     <div class="modal-content p-0 border-0 rounded-3 shadow-lg overflow-hidden position-relative">
@@ -148,74 +147,95 @@
                                 <img id="mainImg{{ $pr->id }}" src="{{ $productImgUrl }}" alt="{{ $pr->name }}" class="img-fluid">
                             </div>
                             <div class="col-md-6 p-4 d-flex flex-column">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <h4 class="modal-title">{{ $pr->name }}</h4>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <h5 class="text-danger fw-bold mb-3" id="price{{ $pr->id }}">
-                                    Rp {{ number_format($productPrice, 0, ',', '.') }}
-                                </h5>
-                                <small class="text-muted mb-3 d-block" id="modalClickCount{{ $pr->id }}">
-                                    Dilihat: {{ $pr->click_count ?? 0 }} kali
-                                </small>
-                                <p class="text-muted mb-3">{{ $pr->desc ?? 'Deskripsi tidak tersedia' }}</p>
-
-                                @if($pr->store)
-                                    <div class="mb-3 p-2 bg-light rounded">
-                                        <p class="mb-1"><strong>Toko:</strong> {{ $pr->store->name }}</p>
-                                        <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ $pr->store->alamat }}</p>
+                                <div class="modal-body-scroll">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h4 class="modal-title">{{ $pr->name }}</h4>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                @endif
+                                    <h5 class="text-danger fw-bold mb-3" id="price{{ $pr->id }}">
+                                        Rp {{ number_format($productPrice, 0, ',', '.') }}
+                                    </h5>
+                                    <small class="text-muted mb-3 d-block" id="modalClickCount{{ $pr->id }}">
+                                        Dilihat: {{ $pr->click_count ?? 0 }} kali
+                                    </small>
 
-                                @if($pr->variants->count())
-                                    <div class="mb-3">
-                                        <label class="fw-semibold mb-2 d-block">Pilih Warna:</label>
-                                        <div class="d-flex flex-wrap gap-2">
-                                            @foreach($pr->variants as $variant)
-                                                @php
-                                                    $variantImg = $variant->img ? asset('storage/' . $variant->img) : $productImgUrl;
-                                                @endphp
-                                                <button type="button"
-                                                        class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}"
-                                                        data-product="{{ $pr->id }}"
-                                                        data-color="{{ $variant->color }}"
-                                                        data-img="{{ $variantImg }}"
-                                                        data-price="{{ $variant->price ?? $productPrice }}">
-                                                    {{ ucfirst($variant->color) }}
-                                                </button>
-                                            @endforeach
+                                    
+                                    
+                                    @if($pr->store)
+                                        <div class="mb-3 p-2 bg-light rounded">
+                                            <p class="mb-1"><strong>Toko:</strong> {{ $pr->store->name }}</p>
+                                            <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ $pr->store->alamat }}</p>
                                         </div>
-                                    </div>
+                                    @endif
 
-                                    @if(!empty($availableSizes))
-                                        <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
-                                            <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
-                                            <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
-                                                @foreach($availableSizes as $s)
+                                    @if($pr->variants->count())
+                                        <div class="mb-3">
+                                            <label class="fw-semibold mb-2 d-block">Pilih Warna:</label>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                @foreach($pr->variants as $variant)
+                                                    @php
+                                                        $variantImg = $variant->img ? asset('storage/' . $variant->img) : $productImgUrl;
+                                                    @endphp
                                                     <button type="button"
-                                                            class="btn btn-outline-secondary btn-sm size-option"
-                                                            onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
-                                                        {{ $s }}
+                                                            class="btn btn-outline-dark btn-sm color-btn {{ $loop->first ? 'active' : '' }}"
+                                                            data-product="{{ $pr->id }}"
+                                                            data-color="{{ $variant->color }}"
+                                                            data-img="{{ $variantImg }}"
+                                                            data-price="{{ $variant->price ?? $productPrice }}">
+                                                        {{ ucfirst($variant->color) }}
                                                     </button>
                                                 @endforeach
                                             </div>
                                         </div>
+
+                                        @if(!empty($availableSizes))
+                                            <div class="mb-3 size-wrapper" id="sizeWrapper{{ $pr->id }}">
+                                                <label class="fw-semibold mb-2 d-block">Pilih Ukuran:</label>
+                                                <div class="d-flex flex-wrap gap-2" id="sizes{{ $pr->id }}">
+                                                    @foreach($availableSizes as $s)
+                                                        <button type="button"
+                                                                    class="btn btn-outline-secondary btn-sm size-option"
+                                                                    onclick="selectSize({{ $pr->id }}, '{{ $s }}')">
+                                                            {{ $s }}
+                                                        </button>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
                                     @endif
-                                @endif
 
-                                <div class="mb-3">
-                                    <label class="fw-semibold mb-2 d-block">Jumlah:</label>
-                                    <input type="number" class="form-control w-50" value="1" min="1" id="qty{{ $pr->id }}">
+                                    <div class="mb-3">
+                                        <label class="fw-semibold mb-2 d-block">Jumlah:</label>
+                                        <input type="number" class="form-control w-50" value="1" min="1" id="qty{{ $pr->id }}">
+                                    </div>
+
+                                    <a href="#"
+                                        class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
+                                        data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
+                                        data-store-name="{{ $pr->store->name ?? '' }}"
+                                        data-store-address="{{ $pr->store->alamat ?? '' }}"
+                                        onclick="sendWA({{ $pr->id }})">
+                                        <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
+                                    </a>
+
+                                    {{-- START: PERUBAHAN TAMPILAN DESKRIPSI KE COLLAPSIBLE --}}
+                                    <div class="mt-4">
+                                        <p class="collapse-text-header collapsed"
+                                       data-bs-target="#collapseDesc{{ $pr->id }}" 
+                                        aria-expanded="false" 
+                                        aria-controls="collapseDesc{{ $pr->id }}"
+                                        role="button">
+                                            Deskripsi Produk
+                                            <i class="bi bi-chevron-down icon"></i>
+                                        </p>
+
+                                        <div class="collapse" id="collapseDesc{{ $pr->id }}">
+                                            <div class="product-desc mt-0">
+                                                {!! nl2br(e($pr->desc ?? 'Deskripsi tidak tersedia')) !!}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-
-                                <a href="#"
-                                   class="btn btn-wa w-100 mt-auto d-flex justify-content-center align-items-center gap-2 fw-semibold"
-                                   data-wa="{{ $pr->store->telepon ?? '6280000000000' }}"
-                                   data-store-name="{{ $pr->store->name ?? '' }}"
-                                   data-store-address="{{ $pr->store->alamat ?? '' }}"
-                                   onclick="sendWA({{ $pr->id }})">
-                                   <i class="bi bi-whatsapp"></i> Pesan via WhatsApp
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -225,87 +245,296 @@
     </div>
 </section>
 
-<!-- Script untuk menambah click_count saat modal dibuka -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.addEventListener('show.bs.modal', function (event) {
-            const modalId = modal.id.replace('productModal', '');
-            const url = "{{ route('product.addClick', ['id' => '__ID__']) }}".replace('__ID__', modalId);
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({})
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.success) {
-                    // Update jumlah dilihat di halaman dan modal
-                    const clickEl = document.getElementById('clickCount' + modalId);
-                    const modalClickEl = document.getElementById('modalClickCount' + modalId);
-                    if(clickEl) clickEl.textContent = 'Dilihat: ' + data.click_count + ' kali';
-                    if(modalClickEl) modalClickEl.textContent = 'Dilihat: ' + data.click_count + ' kali';
-                }
-            })
-            .catch(err => console.error(err));
-        }, { once: true }); // ✅ Pastikan hanya sekali per modal
-    });
-});
-</script>
-
  <!-- Tombol Lihat Semua Produk -->
     <div class="text-center mt-4">
         <a href="{{ url('/produk') }}" class="btn btn-custom px-4 py-2 fw-semibold">
             Lihat Semua Produk
         </a>
     </div>
+@php
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
-<!-- Berita Compact Responsive Swipe -->
+// Memastikan variabel $news tersedia (sesuai HomeController)
+$items = $news ?? collect([]); 
+$menuName = 'Berita Terkini'; 
+@endphp
+
 <section id="berita" class="container py-5">
-    <h2 class="section-title mb-4 text-center">Berita Terkini</h2>
+    <h2 class="section-title text-center mb-5" style="color: #5c4033; font-weight: 700;">{{ $menuName }}</h2>
 
-    {{-- Pembungkus utama untuk swipe horizontal --}}
-    <div class="berita-wrapper">
-        {{-- Loop menggunakan variabel $news dari HomeController --}}
-        @foreach ($news as $n)
-            <div class="berita-card">
-                <div class="card h-100 shadow-sm border-0">
-                    {{-- Gambar berita --}}
-                    <img src="{{ asset('storage/'.$n->img) }}" class="card-img-top" alt="{{ $n->title }}">
+    @if($items->isEmpty())
+        <div class="alert alert-info text-center" role="alert">
+            Saat ini belum ada berita tersedia.
+        </div>
+    @else
+        {{-- Pembungkus utama untuk swipe horizontal (Menggunakan class content-wrapper) --}}
+        <div class="content-wrapper">
+            {{-- Loop menggunakan variabel $news --}}
+            @foreach ($items as $item)
+                @php
+                    $imagePath = $item->img 
+                        ? asset('storage/' . $item->img) 
+                        : 'https://placehold.co/400x250/f5e6dc/5c4033?text=Tidak+Ada+Gambar';
                     
-                    <div class="card-body d-flex flex-column">
-                        {{-- Judul berita --}}
-                        <h5 class="card-title">{{ $n->title }}</h5>
+                    // Escape full content untuk data attribute
+                    $fullContent = htmlspecialchars($item->content, ENT_QUOTES, 'UTF-8');
+                @endphp
+                
+                {{-- Menggunakan class dinamis-card untuk swipe/scroll snap --}}
+                <div class="dinamis-card"> 
+                    <div class="card h-100 shadow-lg border-0 hover-lift" style="border-radius: 12px; overflow: hidden; transition: transform 0.3s;">
                         
-                        {{-- Tanggal berita --}}
-                        <small class="text-muted mb-2">
-                            {{ \Carbon\Carbon::parse($n->date)->format('d F Y') }}
-                        </small>
+                        {{-- Gambar konten --}}
+                        <div class="image-container">
+                            <img 
+                                src="{{ $imagePath }}" 
+                                class="card-img-top" 
+                                alt="{{ $item->title }}"
+                                onerror="this.onerror=null; this.src='https://placehold.co/400x250/f5e6dc/5c4033?text=Gagal+Memuat';"
+                            >
+                        </div>
                         
-                        {{-- Cuplikan isi berita --}}
-                        <p class="card-text flex-grow-1">
-                            {{ Str::limit(strip_tags($n->content), 100) }}
-                        </p>
-                        
-                        {{-- Tombol detail --}}
-                        <a href="{{ route('berita.show', $n->id) }}" class="btn btn-custom mt-auto">
-                            Baca Selengkapnya
-                        </a>
+                        <div class="card-body d-flex flex-column p-4">
+                            
+                            {{-- Meta Info --}}
+                            <small class="text-muted mb-2 d-flex align-items-center card-meta" style="font-size: 0.85rem;">
+                                <i class="bi bi-calendar-event me-1" style="color: #a1866f;"></i>
+                                {{ Carbon::parse($item->date)->format('d F Y') }}
+                                <span class="badge detail-badge ms-2">Berita</span>
+                            </small>
+
+                            {{-- Judul konten --}}
+                            <h5 class="card-title fw-bold" style="color: #3e2f23; font-size: 1.15rem; line-height: 1.4;">{{ $item->title }}</h5>
+                            
+                            {{-- Cuplikan isi konten --}}
+                            <p class="card-text flex-grow-1 mt-2" style="font-size: 0.95rem; color: #555;">
+                                {{ Str::limit(strip_tags($item->content), 100) }}
+                            </p>
+                            
+                            {{-- Tombol Aksi (MODE DETAIL - Trigger Modal) --}}
+                            <button 
+                                type="button" 
+                                class="btn btn-custom-sm mt-3 detail-btn"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#beritaDetailModal" {{-- ID Modal diubah --}}
+                                data-title="{{ $item->title }}"
+                                data-date="{{ Carbon::parse($item->date)->format('d F Y') }}"
+                                data-location="{{ $item->location ?? 'Tidak Ada Lokasi' }}" 
+                                data-menu="{{ $menuName }}"
+                                data-img="{{ $imagePath }}"
+                                data-content="{{ $fullContent }}"
+                            >
+                                Baca Selengkapnya <i class="bi bi-arrow-right-short"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endforeach
-    </div>
+            @endforeach
+        </div>
+    @endif
 </section>
 
+{{-- ================================================================= --}}
+{{-- MODAL UNTUK TAMPILAN DETAIL BERITA --}}
+{{-- ================================================================= --}}
 
+<div class="modal fade" id="beritaDetailModal" tabindex="-1" aria-labelledby="beritaDetailModalLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius: 16px;">
+        <div class="modal-header border-0 pb-0" style="padding: 20px 25px 0;">
+            <h5 class="modal-title fw-bold" id="beritaDetailModalLabel" style="color: #3e2f23;">Detail Berita</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 p-md-5">
+            <div class="container-konten-modal">
 
+                {{-- Judul Konten --}}
+                <h1 id="modal-title" class="fw-bold" style="font-size: 2rem; color: #5c4033; margin-bottom: 15px;"></h1>
+
+                {{-- Info Bar --}}
+                <div class="info-bar mb-4 d-flex flex-wrap gap-3">
+                    <div id="modal-date" class="d-flex align-items-center">
+                        <i class="bi bi-calendar-event me-2"></i> <span></span>
+                    </div>
+                    <div id="modal-location" class="d-flex align-items-center">
+                        <i class="bi bi-geo-alt me-2"></i> <span></span>
+                    </div>
+                    <div id="modal-menu" class="d-flex align-items-center">
+                        <i class="bi bi-tags me-2"></i> <span></span>
+                    </div>
+                </div>
+
+                <hr class="separator my-4">
+
+                {{-- Gambar Utama --}}
+                <img id="modal-img" src="" alt="" class="main-img shadow-sm mb-4 rounded" style="display: none;">
+
+                {{-- Konten Penuh --}}
+                <div id="modal-content" class="content-body" style="line-height: 1.8; color: #3e2f23;">
+                    {{-- Isi konten HTML akan dimasukkan di sini --}}
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer border-0 pt-0" style="padding: 15px 25px 25px;">
+            <button type="button" class="btn btn-custom" data-bs-dismiss="modal">
+                <i class="bi bi-arrow-left"></i> Tutup
+            </button>
+        </div>
+    </div>
+</div>
+</div>
+{{-- ================================================================= --}}
+{{-- STYLE (Gaya untuk Listing dan Detail) --}}
+{{-- ================================================================= --}}
+
+<style>
+body {
+font-family: "Inter", sans-serif;
+color: #3e2f23;
+}
+.section-title {
+color: #5c4033;
+font-weight: 700;
+font-size: 2.2rem;
+}
+.card-title {
+color: #3e2f23;
+font-size: 1.15rem !important;
+line-height: 1.4;
+}
+.link-badge, .detail-badge {
+font-size: 0.75rem;
+padding: 4px 8px;
+border-radius: 10px;
+font-weight: 600;
+}
+.link-badge {
+background-color: #5c4033;
+color: #fff;
+}
+.detail-badge {
+background-color: #f5e6dc;
+color: #a1866f;
+border: 1px solid #a1866f;
+}
+
+/* Modal Info Bar */
+.info-bar {
+    font-size: 0.95rem;
+    color: #7a6651;
+}
+.info-bar i {
+    color: #a1866f;
+    font-size: 1.1em;
+}
+.main-img {
+    width: 100%;
+    max-height: 450px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom Button Styles */
+.btn-custom {
+    background-color: #a1866f;
+    color: #fff;
+    border-radius: 30px;
+    padding: 10px 25px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    border: none;
+    font-size: 1rem;
+}
+.btn-custom:hover {
+    background-color: #5c4033;
+    color: #fff;
+}
+.btn-custom-sm {
+    background-color: #5c4033;
+    color: #fff;
+    border-radius: 20px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background-color 0.3s;
+    border: none;
+}
+.btn-custom-sm:hover {
+    background-color: #a1866f;
+    color: #fff;
+}
+hr.separator {
+    border: 0;
+    height: 1px;
+    background: #e0d7cd;
+    margin: 15px 0;
+}
+
+/* KONTEN CARD LISTING (Swipe) */
+.content-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    padding-bottom: 20px; 
+    scroll-snap-type: x mandatory;
+}
+.content-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+.content-wrapper::-webkit-scrollbar-thumb {
+    background: #a1866f;
+    border-radius: 4px;
+}
+
+.dinamis-card {
+    flex: 0 0 auto;
+    width: 300px;
+    min-width: 280px;
+    scroll-snap-align: start;
+}
+.dinamis-card .image-container {
+    height: 180px;
+    overflow: hidden;
+}
+.dinamis-card .card-img-top {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 0;
+    transition: transform 0.5s ease;
+}
+.dinamis-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* RESPONSIVE ADJUSTMENTS */
+@media (max-width: 992px) {
+    .section-title { font-size: 2rem; }
+    #modal-title { font-size: 1.8rem !important; }
+}
+
+@media (max-width: 768px) {
+    .section-title { font-size: 1.7rem; }
+    #modal-title { font-size: 1.5rem !important; }
+    .info-bar { font-size: 0.85rem; gap: 10px; }
+    .btn-custom { padding: 8px 18px; font-size: 0.9rem; }
+
+    .dinamis-card {
+        width: 90vw; 
+        min-width: 250px;
+    }
+}
+
+</style>
 <!-- Galeri -->
 <section id="galeri" class="container py-5">
     <h2 class="section-title">Galeri</h2>
@@ -327,10 +556,12 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         @endforeach
     </div>
-
-    <!-- Tombol Lihat Semua -->
     <div class="text-center mt-4">
-        <a href="{{ route('galeri.index') }}" class="btn btn-custom">Lihat Semua Galeri</a>
+        {{-- PERBAIKAN: Menggunakan route('page.dynamic') dengan parameter slug --}}
+        {{-- Ini akan menghasilkan URL: /halaman/{slug} --}}
+        <a href="{{ route('page.dynamic', ['slug' => $galeriSlug]) }}" class="btn btn-custom">
+            Lihat Semua Galeri <i class="bi bi-images ms-2"></i>
+        </a>
     </div>
 </section>
 
@@ -480,7 +711,41 @@ document.addEventListener('click', function(e){
         if(productId) selectSize(productId,e.target.innerText);
     }
 });
+document.addEventListener('DOMContentLoaded', function () {
+    document.body.addEventListener('click', function (e) {
+        const header = e.target.closest('.collapse-text-header');
+        if (!header) return;
 
+        const targetSelector = header.getAttribute('data-bs-target');
+        const collapseEl = document.querySelector(targetSelector);
+        if (!collapseEl) return;
+
+        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
+
+        // Toggle manual
+        if (collapseEl.classList.contains('show')) {
+            bsCollapse.hide();
+            header.classList.add('collapsed');
+        } else {
+            bsCollapse.show();
+            header.classList.remove('collapsed');
+        }
+    });
+
+    // Sync class saat animasi selesai
+    const allCollapse = document.querySelectorAll('.collapse[id^="collapseDesc"]');
+    allCollapse.forEach(collapseEl => {
+        collapseEl.addEventListener('shown.bs.collapse', () => {
+            const header = document.querySelector(`[data-bs-target="#${collapseEl.id}"]`);
+            header?.classList.remove('collapsed');
+        });
+
+        collapseEl.addEventListener('hidden.bs.collapse', () => {
+            const header = document.querySelector(`[data-bs-target="#${collapseEl.id}"]`);
+            header?.classList.add('collapsed');
+        });
+    });
+});
 
 // === SCROLL PRODUK UNGGULAN ===
 function scrollProduk(direction){
@@ -490,8 +755,37 @@ function scrollProduk(direction){
     const cardWidth = card.offsetWidth + 16;
     container.scrollBy({ left: direction*cardWidth, behavior:'smooth' });
 }
+//clikk
+document.addEventListener('DOMContentLoaded', function() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('show.bs.modal', function (event) {
+            const modalId = modal.id.replace('productModal', '');
+            const url = "{{ route('product.addClick', ['id' => '__ID__']) }}".replace('__ID__', modalId);
 
-
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    // Update jumlah dilihat di halaman dan modal
+                    const clickEl = document.getElementById('clickCount' + modalId);
+                    const modalClickEl = document.getElementById('modalClickCount' + modalId);
+                    if(clickEl) clickEl.textContent = 'Dilihat: ' + data.click_count + ' kali';
+                    if(modalClickEl) modalClickEl.textContent = 'Dilihat: ' + data.click_count + ' kali';
+                }
+            })
+            .catch(err => console.error(err));
+        }, { once: true }); // ✅ Pastikan hanya sekali per modal
+    });
+});
 // --- FIX 2: SCRIPT GALERI DENGAN URL STORAGE YANG BENAR ---
 // Data galeri dari controller, pastikan URL storage-nya benar
 const galleryImages = @json($galeriTerbaru->map(fn($g) => asset('storage/' . $g->img)));
@@ -527,6 +821,93 @@ window.addEventListener('scroll', ()=>{
     navbar.classList.toggle('scrolled', window.scrollY>50);
 });
 window.addEventListener('load', ()=>document.querySelectorAll('.navbar').forEach(nav=>nav.style.opacity='1'));
+/**
+ * Fungsi untuk mendekode entitas HTML yang telah di-encode
+ */
+function decodeHtml(html) {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+}
+
+/**
+ * Fungsi untuk memformat plain text dengan baris baru (\n) 
+ * menjadi struktur HTML paragraf (<p>) jika konten belum berupa HTML.
+ */
+function formatContentToHtml(plainTextContent) {
+    if (!plainTextContent) return '';
+    
+    // Pisahkan konten berdasarkan baris baru (\r?\n)
+    const paragraphs = plainTextContent.split(/\r?\n/);
+
+    // Filter baris kosong dan bungkus dengan tag <p>
+    const htmlContent = paragraphs
+        .filter(p => p.trim() !== '')
+        .map(p => `<p>${p.trim()}</p>`)
+        .join('');
+        
+    return htmlContent;
+}
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const detailModal = document.getElementById('beritaDetailModal'); // ID disesuaikan
+
+    if (detailModal) {
+        detailModal.addEventListener('show.bs.modal', function (event) {
+            // Pastikan yang memicu adalah tombol detail
+            if (!event.relatedTarget.classList.contains('detail-btn')) return;
+
+            const button = event.relatedTarget; 
+
+            // Ambil data dari data attributes
+            const title = button.getAttribute('data-title');
+            const date = button.getAttribute('data-date');
+            const location = button.getAttribute('data-location');
+            const menu = button.getAttribute('data-menu');
+            const img = button.getAttribute('data-img');
+            const content = button.getAttribute('data-content'); // Konten masih dalam bentuk entity
+
+            // Dapatkan elemen modal
+            const modalTitle = detailModal.querySelector('#modal-title');
+            const modalDate = detailModal.querySelector('#modal-date span');
+            const modalLocation = detailModal.querySelector('#modal-location span');
+            const modalMenu = detailModal.querySelector('#modal-menu span');
+            const modalImg = detailModal.querySelector('#modal-img');
+            const modalContent = detailModal.querySelector('#modal-content');
+
+            // Isi elemen dengan data
+            modalTitle.textContent = title;
+            modalDate.textContent = date;
+            modalLocation.textContent = location;
+            modalMenu.textContent = menu;
+
+            // Atur gambar
+            const isPlaceholder = img.includes('Tidak+Ada+Gambar'); 
+            
+            if (img && !isPlaceholder) {
+                modalImg.src = img;
+                modalImg.alt = title;
+                modalImg.style.display = 'block';
+            } else {
+                modalImg.style.display = 'none';
+                modalImg.src = ''; 
+            }
+
+            // Memproses konten untuk pemformatan
+            const decodedContent = decodeHtml(content);
+            const isHtmlContent = decodedContent.trim().startsWith('<');
+
+            if (isHtmlContent) {
+                // Konten sudah berupa HTML, langsung gunakan
+                modalContent.innerHTML = decodedContent;
+            } else {
+                // Konten adalah plain text, format menjadi <p>
+                modalContent.innerHTML = formatContentToHtml(decodedContent);
+            }
+        });
+    }
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -11,6 +11,7 @@ use App\Http\Controllers\GaleriController;
 use App\Http\Controllers\StatisPageController;
 use App\Http\Controllers\Back_End\AdminController;
 use App\Http\Controllers\Back_End\AuthController;
+    
 
 /*
 |--------------------------------------------------------------------------
@@ -28,20 +29,12 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Home alternatif (legacy / optional)
 Route::get('/home', [HomeController::class, 'index']);
 
-// Berita detail
-Route::get('/berita/{id}', [BeritaController::class, 'show'])->name('berita.show');
 
 // Produk front-end
 Route::get('/produk', [ProductController::class, 'index'])->name('produk.index');
 
 // Tambah click_count produk (AJAX)
 Route::post('/product/click/{id}', [ProductController::class, 'addClick'])->name('product.addClick');
-
-// Galeri
-Route::get('/galeri', [GaleriController::class, 'index'])->name('galeri.index');
-
-// Event
-Route::get('/event', [EventController::class, 'index'])->name('events.index');
 
 // RUTE GENERIK UNTUK SEMUA MENU BARU (Tambahkan ini)
 Route::get('/halaman/{slug}', [StatisPageController::class, 'dynamicPage'])->name('page.dynamic');
@@ -159,3 +152,6 @@ Route::prefix('operator')->middleware(['auth', 'check_role:operator'])->group(fu
     Route::delete('variant/{variant}', [\App\Http\Controllers\Back_End\ProductController::class, 'destroyVariant'])
         ->name('operator.produk.destroyVariant');
 });
+
+// RUTE GENERIK UNTUK SEMUA MENU BARU (Tambahkan ini)
+Route::get('/halaman/{slug}', [StatisPageController::class, 'dynamicPage'])->name('page.dynamic');

@@ -30,16 +30,55 @@
 
 /* Deskripsi produk */
 .product-desc {
-    background: #f8f9fa;
-    border-radius: 8px;
+    background: #f8f9fa; 
+    border-radius: 0 0 8px 8px; 
     padding: 14px 16px;
     font-size: 0.95rem;
     line-height: 1.6;
     color: #555;
-    margin-top: 20px;
+    border: 1px solid #e9ecef; 
+    border-top: none; 
+}
+.collapse-text-header {
+    /* Gaya untuk teks header yang berfungsi sebagai toggle */
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.1rem; /* Sedikit lebih besar dari teks biasa */
+    color: #343a40; /* Hitam gelap */
+    padding: 8px 0;
+    margin-bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6; /* Garis bawah tipis sebagai pemisah */
 }
 
-/* Produk lain di bawah */
+/* Mengontrol Ikon */
+.collapse-text-header .icon {
+    transition: transform 0.3s ease;
+    font-size: 0.9em; /* Ikon sedikit lebih kecil */
+    color: #6c757d; /* Warna abu-abu untuk ikon */
+}
+
+.collapse-text-header.collapsed .icon {
+    transform: rotate(0deg);
+}
+
+.collapse-text-header:not(.collapsed) .icon {
+    transform: rotate(180deg); /* Panah berputar saat dibuka */
+}
+.modern-collapse-btn .icon {
+    transition: transform 0.3s ease;
+}
+
+.modern-collapse-btn.collapsed .icon {
+    transform: rotate(0deg);
+}
+
+.modern-collapse-btn:not(.collapsed) .icon {
+    transform: rotate(180deg); /* Panah berputar saat dibuka */
+}
+
 .related-wrapper {
     display: flex;
     flex-wrap: nowrap;
@@ -211,8 +250,21 @@
                                     </a>
 
                                     <!-- Deskripsi -->
-                                    <div class="product-desc">
-                                        {!! nl2br(e($pr->desc)) !!}
+                                  <div class="mt-4">
+                                        <div class="collapse-text-header collapsed"
+                                                data-bs-toggle="collapse" 
+                                                data-bs-target="#collapseDesc{{ $pr->id }}" 
+                                                aria-expanded="false" 
+                                                aria-controls="collapseDesc{{ $pr->id }}"
+                                                role="button"> Deskripsi Produk
+                                            <i class="bi bi-chevron-down icon"></i>
+                                        </div>
+                                        
+                                        <div class="collapse" id="collapseDesc{{ $pr->id }}">
+                                            <div class="product-desc mt-0">
+                                                {!! nl2br(e($pr->desc)) !!}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -355,7 +407,26 @@ document.querySelectorAll('.color-btn').forEach(btn => {
         }
     });
 });
+// dropdown deskripsi
+document.addEventListener('DOMContentLoaded', function() {
+    const collapseElements = document.querySelectorAll('.collapse');
+    
+    collapseElements.forEach(collapseEl => {
+        // Mencari elemen yang memiliki data-bs-target yang sesuai
+        const headerElement = document.querySelector(`[data-bs-target="#${collapseEl.id}"]`);
+        if (!headerElement) return;
 
+        // Ikon berputar saat membuka
+        collapseEl.addEventListener('show.bs.collapse', function () {
+            headerElement.classList.remove('collapsed');
+        });
+
+        // Ikon kembali normal saat menutup
+        collapseEl.addEventListener('hide.bs.collapse', function () {
+            headerElement.classList.add('collapsed');
+        });
+    });
+});
 function selectSize(id, size){
     const sizesDiv = document.getElementById('sizes'+id);
     sizesDiv.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));

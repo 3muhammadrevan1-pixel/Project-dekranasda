@@ -315,7 +315,9 @@
     background: linear-gradient(135deg, #4B5563, #9CA3AF);
     /* makna: ketegasan, keseimbangan, keprofesionalan */
 }
-
+.stat-card.user {    
+    background: linear-gradient(135deg, #ffd198, #ffca88); 
+  }
 
 
     /* Grid untuk kartu navigasi dashboard */
@@ -352,6 +354,9 @@
     .dashboard-card.galeri i { color: #D4AF37; }    /* emas */
     .dashboard-card.menu i { color: #7B1111; }
     .dashboard-card.struktur i { color: #4B5563; } 
+    .dashboard-card.user i { color: #ffd198; }
+    
+
 
      /* maroon */
 
@@ -410,6 +415,13 @@
         color: #374151; 
     }
 
+    .dashboard-card.user:hover {
+    border-color: #ffd198; 
+    box-shadow: 0 8px 18px rgba(249, 180, 78, 0.315); /* Shadow yang lebih kuat */
+    }
+
+    .dashboard-card.user:hover i,
+    .dashboard-card.user:hover h3 { color: #ffca88;  }
 
     /* =====================================================
     6. TABLE (FLAT ELEGANT - CLEAN WHITE PERFECT ALIGN)

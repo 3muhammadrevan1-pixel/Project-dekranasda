@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\TbMenuData;
 use App\Models\StatisPage;
+use App\Models\TbMenu; // <-- WAJIB: Tambahkan ini untuk mengakses model menu
 
 use Illuminate\Http\Request;
 
@@ -44,11 +45,42 @@ class HomeController extends Controller
                 })
             ];
         });
+        // 🔸 Galeri (Media)
+        // 1. Cari objek menu 'Galeri'
+        $menuGaleri = TbMenu::where('nama', 'Galeri')->first();
+        $galeriSlug = $menuGaleri->slug ?? 'galeri'; // Tetap gunakan slug untuk link 'Lihat Semua'
 
-       // 🔸 Galeri & Berita (ambil dari TbMenuData)
-        $galeriTerbaru = TbMenuData::ofJenis('galeri')->latest()->take(8)->get();
-        $news = TbMenuData::ofJenis('berita')->latest()->take(6)->get();
+        $galeriTerbaru = collect(); // Default koleksi kosong
+        $menuGaleriId = $menuGaleri->id ?? null;
 
+        if ($menuGaleriId) {
+            // 2. Ambil TbMenuData yang terasosiasi HANYA dengan ID menu 'Galeri'
+            $galeriTerbaru = TbMenuData::where('menu_id', $menuGaleriId)
+                // Filter jenis dinamis atau media dipertahankan jika relevan, tapi menu_id adalah filter utama
+                ->ofJenis('media') 
+                ->latest()
+                ->take(8)
+                ->get();
+        }
+
+       // 🔸 Berita (Dinamis - HANYA DARI MENU BERITA)
+        // PERBAIKAN: Mengganti 'slug' menjadi 'nama' karena kolom 'slug' tidak ditemukan.
+        // Pastikan nama menu di database persis 'Berita'.
+        $menuBerita = TbMenu::where('nama', 'Berita')->first();
+        $menuBeritaId = $menuBerita->id ?? null;
+
+        if ($menuBeritaId) {
+            // 2. Ambil TbMenuData yang terasosiasi dengan menu ID tersebut
+            $news = TbMenuData::where('menu_id', $menuBeritaId)
+                // Filter jenis dinamis dipertahankan untuk memastikan konsistensi
+                ->ofJenis('dinamis')
+                ->latest()
+                ->take(6)
+                ->get();
+        } else {
+            // Fallback jika menu 'berita' tidak ditemukan di database
+            $news = collect();
+        }
 
         // 🔸 Ambil Visi Misi Fokus
         $visiMisiPage = StatisPage::where('slug', 'visi-misi')->first();
@@ -71,7 +103,8 @@ class HomeController extends Controller
             'visi',
             'misi',
             'fokus',
-            'programKerja'
+            'programKerja',
+            'galeriSlug'
         ))->with('title', 'Beranda - Dekranasda Kota Bogor');
     }
 }

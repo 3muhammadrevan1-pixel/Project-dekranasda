@@ -145,7 +145,7 @@ body {
 /* ============================= */
 /* Warna variant dan size */
 .btn-outline-dark, .size-option {
-    min-width: 50px;       /* Lebar kotak */
+    min-width: 50px;      /* Lebar kotak */
     min-height: 40px;      /* Tinggi kotak */
     font-size: 14px;
     border-radius: 8px;
@@ -167,3 +167,41 @@ body {
     opacity: 0.4;
     pointer-events: none;
 }
+.product-desc {
+    background: #f8f9fa; 
+    border-radius: 0 0 8px 8px; 
+    padding: 14px 16px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #555;
+    border: 1px solid #e9ecef; 
+    border-top: none; 
+}
+
+.collapse-text-header {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #343a40;
+    padding: 8px 0;
+    margin-bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.collapse-text-header .icon {
+    transition: transform 0.3s ease;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.collapse-text-header.collapsed .icon {
+    transform: rotate(0deg);
+}
+
+.collapse-text-header:not(.collapsed) .icon {
+    transform: rotate(180deg);
+}
+

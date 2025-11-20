@@ -17,6 +17,7 @@
   <link href="{{ asset('/assets/css/organisasi.css') }}" rel="stylesheet">
   <link href="{{ asset('/assets/css/produk.css') }}" rel="stylesheet">
   <link href="{{ asset('/assets/css/modal.css') }}" rel="stylesheet">
+  <link href="{{ asset('/assets/css/statis_style.css') }}" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('/assets/css/event.css') }}">
   <link rel="stylesheet" href="{{ asset('/assets/css/sejarah.css') }}">
 

@@ -3,6 +3,13 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 $items = $menu_data ?? collect([]);
 $menuName = $menu->nama ?? 'Konten Dinamis';
+
+// =========================================================
+// PENYESUAIAN LOGIKA: Urutkan item berdasarkan tanggal (date)
+// secara menurun (Desc) agar yang terbaru muncul paling depan.
+// =========================================================
+$items = $items->sortByDesc('date');
+
 @endphp
 
 <section id="konten-dinamis" class="container py-5">
@@ -45,16 +52,24 @@ $menuName = $menu->nama ?? 'Konten Dinamis';
                     
                     <div class="card-body d-flex flex-column p-4">
                         
-                        {{-- Meta Info --}}
-                        <small class="text-muted mb-2 d-flex align-items-center card-meta" style="font-size: 0.85rem;">
+                        {{-- Meta Info: Tanggal & Badge --}}
+                        <small class="text-muted mb-1 d-flex align-items-center card-meta" style="font-size: 0.85rem;">
                             <i class="bi bi-calendar-event me-1" style="color: #a1866f;"></i>
                             {{ Carbon::parse($item->date)->format('d F Y') }}
                             @if($isLinkMode)
-                                <span class="badge link-badge ms-2">Tautan Eksternal</span>
+                                <span class="badge detail-badge ms-2">Tautan </span>
                             @else
                                 <span class="badge detail-badge ms-2">Detail Konten</span>
                             @endif
                         </small>
+                        
+                        {{-- 🆕 PENAMBAHAN LOKASI PADA CARD --}}
+                        @if(!empty($item->location))
+                            <small class="text-muted mb-3 d-flex align-items-center card-meta" style="font-size: 0.85rem;">
+                                <i class="bi bi-geo-alt me-1" style="color: #a1866f;"></i>
+                                {{ $item->location }}
+                            </small>
+                        @endif
 
                         {{-- Judul konten --}}
                         <h5 class="card-title fw-bold" style="color: #3e2f23; font-size: 1.15rem; line-height: 1.4;">{{ $item->title }}</h5>
@@ -118,50 +133,45 @@ $menuName = $menu->nama ?? 'Konten Dinamis';
 <div class="modal-body p-4 p-md-5">
 <div class="container-konten-modal">
 
-                {{-- Judul Konten --}}
-                <h1 id="modal-title" class="fw-bold" style="font-size: 2rem; color: #5c4033; margin-bottom: 15px;"></h1>
+    {{-- Judul Konten --}}
+    <h1 id="modal-title" class="fw-bold" style="font-size: 2rem; color: #5c4033; margin-bottom: 15px;"></h1>
 
-                {{-- Info Bar --}}
-                <div class="info-bar mb-4 d-flex flex-wrap gap-3">
-                    <div id="modal-date" class="d-flex align-items-center">
-                        <i class="bi bi-calendar-event me-2"></i> <span></span>
-                    </div>
-                    <div id="modal-location" class="d-flex align-items-center">
-                        <i class="bi bi-geo-alt me-2"></i> <span></span>
-                    </div>
-                    <div id="modal-menu" class="d-flex align-items-center">
-                        <i class="bi bi-tags me-2"></i> <span></span>
-                    </div>
-                </div>
-
-                <hr class="separator my-4">
-
-                {{-- Gambar Utama --}}
-                <img id="modal-img" src="" alt="" class="main-img shadow-sm mb-4 rounded" style="display: none;">
-
-                {{-- Konten Penuh --}}
-                <div id="modal-content" class="content-body" style="line-height: 1.8; color: #3e2f23;">
-                    {{-- Isi konten HTML akan dimasukkan di sini --}}
-                </div>
-            </div>
+    {{-- Info Bar yang Sudah Dirapikan --}}
+    <div class="info-bar mb-4 d-flex flex-wrap align-items-center" style="gap: 1.5rem;"> 
+        <div id="modal-date" class="d-flex align-items-center info-item">
+            <i class="bi bi-calendar-event me-2"></i> <span class="fw-medium"></span>
         </div>
-        <div class="modal-footer border-0 pt-0" style="padding: 15px 25px 25px;">
-            <button type="button" class="btn btn-custom" data-bs-dismiss="modal">
-                <i class="bi bi-arrow-left"></i> Tutup
-            </button>
+        <div id="modal-location" class="d-flex align-items-center info-item">
+            <i class="bi bi-geo-alt me-2"></i> <span class="fw-medium"></span>
+        </div>
+        <div id="modal-menu" class="d-flex align-items-center info-item">
+            <i class="bi bi-tags me-2"></i> <span class="fw-medium"></span>
         </div>
     </div>
+
+    <hr class="separator my-4">
+
+    {{-- Gambar Utama --}}
+    <img id="modal-img" src="" alt="" class="main-img shadow-sm mb-4 rounded" style="display: none;">
+
+    {{-- Konten Penuh --}}
+    <div id="modal-content" class="content-body" style="line-height: 1.8; color: #3e2f23;">
+        {{-- Isi konten HTML akan dimasukkan di sini --}}
+    </div>
+</div>
+</div>
+<div class="modal-footer border-0 pt-0" style="padding: 15px 25px 25px;">
+    <button type="button" class="btn btn-custom" data-bs-dismiss="modal">
+        <i class="bi bi-arrow-left"></i> Tutup
+    </button>
+</div>
+</div>
 </div>
 
 
 </div>
-
-{{-- ================================================================= --}}
-{{-- STYLE (Gaya untuk Listing dan Detail) --}}
-{{-- ================================================================= --}}
 
 <style>
-/* Global Styles */
 body {
 font-family: "Inter", sans-serif;
 color: #3e2f23;
@@ -192,15 +202,20 @@ color: #a1866f;
 border: 1px solid #a1866f;
 }
 
-/* Modal Info Bar */
+/* Modal Info Bar (DIRAPIHKAN) */
 .info-bar {
     font-size: 0.95rem;
     color: #7a6651;
+    border-top: 1px solid #e0d7cd; /* Garis pemisah atas */
+    border-bottom: 1px solid #e0d7cd; /* Garis pemisah bawah */
+    padding: 10px 0; /* Padding vertikal */
 }
+
 .info-bar i {
     color: #a1866f;
     font-size: 1.1em;
 }
+
 .main-img {
     width: 100%;
     max-height: 450px;
@@ -298,7 +313,17 @@ hr.separator {
 @media (max-width: 768px) {
     .section-title { font-size: 1.7rem; }
     #modal-title { font-size: 1.5rem !important; }
-    .info-bar { font-size: 0.85rem; gap: 10px; }
+    
+    .info-bar { 
+        font-size: 0.85rem; 
+        gap: 10px !important;
+        flex-direction: column; 
+        align-items: flex-start !important;
+    }
+    .info-bar .info-item {
+        width: 100%;
+    }
+
     .btn-custom { padding: 8px 18px; font-size: 0.9rem; }
 
     .dinamis-card {
@@ -307,12 +332,7 @@ hr.separator {
     }
 }
 
-
 </style>
-
-{{-- ================================================================= --}}
-{{-- JAVASCRIPT UNTUK MODAL DETAIL (SUDAH DISESUAIKAN) --}}
-{{-- ================================================================= --}}
 
 <script>
 /**
@@ -373,7 +393,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Isi elemen dengan data
             modalTitle.textContent = title;
-            modalDate.textContent = date;
+            // Menambahkan class fw-medium pada span di modal agar data terlihat lebih jelas
+            modalDate.textContent = date; 
             modalLocation.textContent = location;
             modalMenu.textContent = menu;
 
@@ -409,6 +430,4 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
-
-
 </script>

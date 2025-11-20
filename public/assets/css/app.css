@@ -473,6 +473,81 @@ header p {
 .product-card {
     width: 220px;
 }
+
+.modal-xl {
+    max-width: 1000px;
+}
+
+.modal-content {
+    overflow: hidden;
+    border-radius: 16px;
+    border: none;
+}
+
+/* Scroll bagian kanan jika konten panjang */
+.modal-body-scroll {
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Batasi tinggi gambar */
+.modal .col-md-6 img {
+    max-height: 70vh;
+    object-fit: contain;
+}
+
+/* Deskripsi produk */
+.product-desc {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #555;
+    margin-top: 20px;
+}
+
+/* Produk lain di bawah */
+.related-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+.related-card {
+    min-width: 160px;
+    flex: 0 0 auto;
+}
+
+.related-card img {
+    height: 120px;
+    object-fit: cover;
+}
+
+/* Hilangkan garis border di bawah "Produk Lainnya" */
+.modal .border-top {
+    border-top: none !important;
+}
+
+/* Responsif untuk HP */
+@media (max-width: 768px) {
+    .modal .row.g-0 {
+        flex-direction: column;
+    }
+    .modal .col-md-6 {
+        width: 100%;
+    }
+    .modal-body-scroll {
+        max-height: none;
+        overflow-y: visible;
+    }
+    .modal .col-md-6 img {
+        max-height: 50vh;
+    }
+}
 .scroll-btn {
     position: absolute;
     top: 50%;
