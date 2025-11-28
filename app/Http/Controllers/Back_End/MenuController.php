@@ -73,14 +73,7 @@ class MenuController extends Controller
             ->with('success', 'Menu berhasil ditambahkan.');
     }
 
-    /**
-     * Tampilkan detail menu.
-     */
-    public function show(TbMenu $menu)
-    {
-        $contents = $menu->contents()->orderByDesc('created_at')->get();
-        return view('admin.menu.show', compact('menu', 'contents'));
-    }
+
 
     /**
      * Form edit menu.
