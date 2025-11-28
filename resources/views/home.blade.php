@@ -245,6 +245,27 @@
     </div>
 </section>
 
+<!-- Modal Konfirmasi WA -->
+<div class="modal fade" id="waConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Konfirmasi Pesanan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="waConfirmMessage" class="mb-0">Apakah Anda yakin ingin memesan produk ini?</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success rounded-pill" id="waConfirmBtn">
+                    <i class="bi bi-whatsapp me-1"></i> Pesan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
  <!-- Tombol Lihat Semua Produk -->
     <div class="text-center mt-4">
         <a href="{{ url('/produk') }}" class="btn btn-custom px-4 py-2 fw-semibold">
@@ -616,7 +637,8 @@ function selectSize(productId, size){
     // PENTING: Panggil updateWa di sini
     updateWa(productId); 
 }
-
+// Fungsi WA dengan modal konfirmasi modern
+let waLink = '';
 function sendWA(productId){
     const pr = allProducts.find(p => p.id == productId);
     if(!pr) return;
@@ -642,9 +664,17 @@ Ukuran: ${selectedSize}
 Jumlah: ${qty}
 Terima kasih.`;
 
-    const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
-    window.open(waUrl,'_blank');
+    waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+    document.getElementById('waConfirmMessage').innerText = `Apakah Anda yakin ingin memesan ${pr.name}?`;
+    const modal = new bootstrap.Modal(document.getElementById('waConfirmModal'));
+    modal.show();
 }
+
+// Tombol “Pesan” modal WA
+document.getElementById('waConfirmBtn').addEventListener('click', function(){
+    if(waLink) window.open(waLink, '_blank');
+    bootstrap.Modal.getInstance(document.getElementById('waConfirmModal')).hide();
+});
 
 // === PILIH WARNA & UPDATE VARIANT (FIXED: Logika Sederhana) ===
 document.addEventListener('click', function(e){

@@ -37,7 +37,7 @@ class StatisPageController extends Controller
         $menu = TbMenu::where('nama', $menuName)->first();
 
         if (!$menu) {
-            // Jika menu tidak ditemukan, tampilkan 404.
+            // Jika menu tidak ditemukan, tampilkan 404.  0
             abort(404, 'Menu atau Halaman statis tidak ditemukan.');
         }
 

@@ -205,3 +205,57 @@ body {
     transform: rotate(180deg);
 }
 
+/* ========================================= */
+/* FIX TAMPILAN PRODUK DI HP BIAR SEJAJAR    */
+/* ========================================= */
+.product-card .card {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* gambar tinggi konsisten di HP */
+@media(max-width:576px) {
+    .card-img-top {
+        height: 200px !important;
+        object-fit: cover;
+    }
+
+    /* harga + view biar nggak turun-naik */
+    .card-body > * {
+        margin-bottom: 6px;
+    }
+    
+    /* tombol detail selalu di bawah */
+    .btn-custom {
+        margin-top: auto;
+    }
+}
+
+/* Tombol WhatsApp modern */
+.btn-wa {
+    background-color: #25d366;
+    color: #fff;
+    font-weight: 600;
+    transition: 0.3s;
+}
+.btn-wa:hover {
+    background-color: #1ebe57;
+    color: #fff;
+}
+
+/* Modal konfirmasi WA */
+#waConfirmModal .modal-content {
+    border-radius: 16px;
+    padding: 0;
+}
+#waConfirmModal .modal-header, #waConfirmModal .modal-footer {
+    border: none;
+}
+
+

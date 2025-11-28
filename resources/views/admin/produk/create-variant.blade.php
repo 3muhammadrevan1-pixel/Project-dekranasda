@@ -29,7 +29,6 @@
             
             <div class="detail-grid grid grid-cols-2 gap-x-6 gap-y-3 text-gray-700 text-sm">
                 <p class="col-span-2"><strong class="font-semibold text-gray-900">Harga Dasar:</strong> <span class="text-red-600 font-bold">Rp {{ number_format($product->price,0,',','.') }}</span></p>
-                <p class="col-span-2"><strong class="font-semibold text-gray-900">Deskripsi:</strong> {{ $product->desc }}</p>
                 <p><strong class="font-semibold text-gray-900">Kategori:</strong> {{ $product->category }}</p>
                 <p><strong class="font-semibold text-gray-900">Tipe:</strong> {{ $product->type }}</p>
             </div>

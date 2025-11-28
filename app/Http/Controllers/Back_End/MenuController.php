@@ -116,7 +116,7 @@ class MenuController extends Controller
         ], [
             'urutan.unique' => 'Nomor urutan sudah digunakan dalam menu induk yang sama.',
             'urutan.required' => 'Kolom urutan wajib diisi.',
-        ]);
+         ]);
 
         // Hanya update field yang boleh diubah
         $menu->update([

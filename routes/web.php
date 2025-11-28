@@ -3,11 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\EventController;
 use App\Http\Controllers\OrganisasiController;
-use App\Http\Controllers\GaleriController;
 use App\Http\Controllers\StatisPageController;
 use App\Http\Controllers\Back_End\AdminController;
 use App\Http\Controllers\Back_End\AuthController;

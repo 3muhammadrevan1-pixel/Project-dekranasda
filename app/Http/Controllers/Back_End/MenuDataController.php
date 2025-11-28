@@ -110,7 +110,7 @@ class MenuDataController extends Controller
 
         // --- Perubahan utama ada di blok ini ---
         if ($contentType === 'dinamis') {
-            // Konten dinamis (Detail atau Link) minimal wajib punya judul dan isi.
+           
             $rules['title'] = 'required|string|max:255';
             $rules['content'] = 'required|string';
             // Link akan divalidasi sebagai URL jika diisi. Jika link kosong, dianggap konten detail.

@@ -40,24 +40,22 @@
     border-top: none; 
 }
 .collapse-text-header {
-    /* Gaya untuk teks header yang berfungsi sebagai toggle */
     cursor: pointer;
     font-weight: 600;
-    font-size: 1.1rem; /* Sedikit lebih besar dari teks biasa */
-    color: #343a40; /* Hitam gelap */
+    font-size: 1.1rem;
+    color: #343a40;
     padding: 8px 0;
     margin-bottom: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #dee2e6; /* Garis bawah tipis sebagai pemisah */
+    border-bottom: 1px solid #dee2e6;
 }
 
-/* Mengontrol Ikon */
 .collapse-text-header .icon {
     transition: transform 0.3s ease;
-    font-size: 0.9em; /* Ikon sedikit lebih kecil */
-    color: #6c757d; /* Warna abu-abu untuk ikon */
+    font-size: 0.9em;
+    color: #6c757d;
 }
 
 .collapse-text-header.collapsed .icon {
@@ -65,8 +63,9 @@
 }
 
 .collapse-text-header:not(.collapsed) .icon {
-    transform: rotate(180deg); /* Panah berputar saat dibuka */
+    transform: rotate(180deg);
 }
+
 .modern-collapse-btn .icon {
     transition: transform 0.3s ease;
 }
@@ -76,7 +75,7 @@
 }
 
 .modern-collapse-btn:not(.collapsed) .icon {
-    transform: rotate(180deg); /* Panah berputar saat dibuka */
+    transform: rotate(180deg);
 }
 
 .related-wrapper {
@@ -100,6 +99,27 @@
 /* Hilangkan garis border di bawah "Produk Lainnya" */
 .modal .border-top {
     border-top: none !important;
+}
+
+/* Tombol WhatsApp modern */
+.btn-wa {
+    background-color: #25d366;
+    color: #fff;
+    font-weight: 600;
+    transition: 0.3s;
+}
+.btn-wa:hover {
+    background-color: #1ebe57;
+    color: #fff;
+}
+
+/* Modal konfirmasi WA */
+#waConfirmModal .modal-content {
+    border-radius: 16px;
+    padding: 0;
+}
+#waConfirmModal .modal-header, #waConfirmModal .modal-footer {
+    border: none;
 }
 
 /* Responsif untuk HP */
@@ -250,7 +270,7 @@
                                     </a>
 
                                     <!-- Deskripsi -->
-                                  <div class="mt-4">
+                                    <div class="mt-4">
                                         <div class="collapse-text-header collapsed"
                                                 data-bs-toggle="collapse" 
                                                 data-bs-target="#collapseDesc{{ $pr->id }}" 
@@ -302,6 +322,28 @@
         @endforeach
     </div>
 </div>
+
+<!-- Modal Konfirmasi WA -->
+<div class="modal fade" id="waConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Konfirmasi Pesanan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="waConfirmMessage" class="mb-0">Apakah Anda yakin ingin memesan produk ini?</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success rounded-pill" id="waConfirmBtn">
+                    <i class="bi bi-whatsapp me-1"></i> Pesan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
@@ -407,26 +449,25 @@ document.querySelectorAll('.color-btn').forEach(btn => {
         }
     });
 });
+
 // dropdown deskripsi
 document.addEventListener('DOMContentLoaded', function() {
     const collapseElements = document.querySelectorAll('.collapse');
     
     collapseElements.forEach(collapseEl => {
-        // Mencari elemen yang memiliki data-bs-target yang sesuai
         const headerElement = document.querySelector(`[data-bs-target="#${collapseEl.id}"]`);
         if (!headerElement) return;
 
-        // Ikon berputar saat membuka
         collapseEl.addEventListener('show.bs.collapse', function () {
             headerElement.classList.remove('collapsed');
         });
 
-        // Ikon kembali normal saat menutup
         collapseEl.addEventListener('hide.bs.collapse', function () {
             headerElement.classList.add('collapsed');
         });
     });
 });
+
 function selectSize(id, size){
     const sizesDiv = document.getElementById('sizes'+id);
     sizesDiv.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));
@@ -441,6 +482,8 @@ function switchModal(currentId, targetId){
     new bootstrap.Modal(target).show();
 }
 
+// Fungsi WA dengan modal konfirmasi modern
+let waLink = '';
 function sendWA(productId){
     const pr = allProducts.find(p => p.id == productId);
     if (!pr) return;
@@ -456,7 +499,17 @@ Produk: ${pr.name}
 Toko: ${storeName}
 Alamat: ${storeAddress}
 ${selectedColor ? `Warna: ${selectedColor}\n` : ''}${selectedSize ? `Ukuran: ${selectedSize}\n` : ''}Jumlah: ${qty}`;
-    window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, '_blank');
+
+    waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+    document.getElementById('waConfirmMessage').innerText = `Apakah Anda yakin ingin memesan ${pr.name}?`;
+    const modal = new bootstrap.Modal(document.getElementById('waConfirmModal'));
+    modal.show();
 }
+
+// Tombol “Pesan” modal WA
+document.getElementById('waConfirmBtn').addEventListener('click', function(){
+    if(waLink) window.open(waLink, '_blank');
+    bootstrap.Modal.getInstance(document.getElementById('waConfirmModal')).hide();
+});
 </script>
 @endsection
